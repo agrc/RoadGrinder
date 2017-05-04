@@ -37,7 +37,7 @@ namespace RoadGrinder
                 return;
             }
 
-            const string roadsFeatureClassName = "Roads";
+            const string roadsFeatureClassName = "SGID10.TRANSPORTATION.Roads";
             var start = Stopwatch.StartNew();
 
             //ESRI License Initializer generated code
@@ -88,6 +88,7 @@ namespace RoadGrinder
                         grinder = new AlternateNamesGrinder(roads, options);
                         break;
                     }
+                    
                     case OutputType.NextGen:
                     {
                         grinder = new NextGenGrinder();

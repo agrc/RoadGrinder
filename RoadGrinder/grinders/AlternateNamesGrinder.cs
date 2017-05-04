@@ -29,24 +29,24 @@ namespace RoadGrinder.grinders
 
             try
             {
-                var outputFeatureWorkspace = (IFeatureWorkspace) output;
+                var outputFeatureWorkspace = (IFeatureWorkspace)output;
 
                 // create a feature cursor from the source roads data and loop through this subset
                 // create the query filter to filter results
                 // FOR TESTING...                 
-                const string streetsThatCrossGrids = @"ADDR_SYS = 'SALT LAKE CITY' and CARTOCODE not in ('1','7','99') and 
-((L_F_ADD <> 0 and L_T_ADD <> 0) OR (R_F_ADD <> 0 and R_T_ADD <> 0)) and 
-STREETNAME <> '' and STREETNAME not like '%ROUNDABOUT%'";
+                const string geocodableRoads = @"ADDR_SYS = 'SALT LAKE CITY' and CARTOCODE not in ('1','7','99') and 
+                                                    ((L_F_ADD <> 0 and L_T_ADD <> 0) OR (R_F_ADD <> 0 and R_T_ADD <> 0)) and 
+                                                    STREETNAME <> '' and STREETNAME not like '%ROUNDABOUT%'";
 
                 // GO LIVE...
-                //strQuery = @"CARTOCODE not in ('1','7','99') and ((L_F_ADD <> 0 and L_T_ADD <> 0) OR (R_F_ADD <> 0 and R_T_ADD <> 0)) and STREETNAME <> '' and STREETNAME not like '%ROUNDABOUT%'";
+                //geocodableRoads = @"CARTOCODE not in ('1','7','99') and ((L_F_ADD <> 0 and L_T_ADD <> 0) OR (R_F_ADD <> 0 and R_T_ADD <> 0)) and STREETNAME <> '' and STREETNAME not like '%ROUNDABOUT%'";
                 var roadsFilter = new QueryFilter
                 {
-                    WhereClause = streetsThatCrossGrids
+                    WhereClause = geocodableRoads
                 };
 
                 // create a ComReleaser for feature cursor's life-cycle management
-                outputEditWorkspace = (IWorkspaceEdit) outputFeatureWorkspace;
+                outputEditWorkspace = (IWorkspaceEdit)outputFeatureWorkspace;
                 using (var comReleaser = new ComReleaser())
                 {
                     var roadsCursor = _roads.Search(roadsFilter, false);
@@ -75,10 +75,10 @@ STREETNAME <> '' and STREETNAME not like '%ROUNDABOUT%'";
                         {
                             // only write necessary key/values
                             var streetValueMap = valueMap;
-                            RemoveKeys(streetValueMap);
+                            //RemoveKeys(streetValueMap);
 
                             // create a new feature
-                            EsriHelper.InsertFeatureInto(roadFeature, _geocodeRoads, streetValueMap);
+                            EsriHelper.InsertFeatureInto(roadFeature, _geocodeRoads, streetValueMap, true);
                         }
                         // check if this segment has an alias name
                         if (!string.IsNullOrEmpty(valueMap["ALIAS1"].Value.ToString()))
@@ -87,10 +87,10 @@ STREETNAME <> '' and STREETNAME not like '%ROUNDABOUT%'";
                             aliasValueMap["STREETNAME"] = aliasValueMap["ALIAS1"];
                             aliasValueMap["STREETTYPE"] = aliasValueMap["ALIAS1TYPE"];
 
-                            RemoveKeys(aliasValueMap);
+                            //RemoveKeys(aliasValueMap);
 
                             // create a new feature
-                            EsriHelper.InsertFeatureInto(roadFeature, _geocodeRoads, aliasValueMap);
+                            EsriHelper.InsertFeatureInto(roadFeature, _geocodeRoads, aliasValueMap, true);
                         }
                         // check if this segment has a second alias name
                         if (!string.IsNullOrEmpty(valueMap["ALIAS2"].Value.ToString()))
@@ -99,10 +99,10 @@ STREETNAME <> '' and STREETNAME not like '%ROUNDABOUT%'";
                             aliasValueMap["STREETNAME"] = aliasValueMap["ALIAS2"];
                             aliasValueMap["STREETTYPE"] = aliasValueMap["ALIAS2TYPE"];
 
-                            RemoveKeys(aliasValueMap);
+                            //RemoveKeys(aliasValueMap);
 
                             // create a new feature
-                            EsriHelper.InsertFeatureInto(roadFeature, _geocodeRoads, aliasValueMap);
+                            EsriHelper.InsertFeatureInto(roadFeature, _geocodeRoads, aliasValueMap, true);
                         }
                         // check if this segment has an acs alias name
                         if (!string.IsNullOrEmpty(valueMap["ACSNAME"].Value.ToString()))
@@ -112,10 +112,10 @@ STREETNAME <> '' and STREETNAME not like '%ROUNDABOUT%'";
                             acsValueMap["SUFDIR"] = acsValueMap["ACSSUF"];
 
                             acsValueMap.Remove("STREETTYPE");
-                            RemoveKeys(acsValueMap);
+                            //RemoveKeys(acsValueMap);
 
                             // create a new feature
-                            EsriHelper.InsertFeatureInto(roadFeature, _geocodeRoads, acsValueMap);
+                            EsriHelper.InsertFeatureInto(roadFeature, _geocodeRoads, acsValueMap, false);
                         }
                     }
 
@@ -140,8 +140,8 @@ STREETNAME <> '' and STREETNAME not like '%ROUNDABOUT%'";
             var output = EsriHelper.CreateFileGdbWorkspace(_options.OutputGeodatabase, GeocodeRoadsFeatureClassName);
             // releaser.ManageLifetime(output);
 
-            var outputFeatureWorkspace = (IFeatureWorkspace) output;
-            var outputWorkspace2 = (IWorkspace2) output;
+            var outputFeatureWorkspace = (IFeatureWorkspace)output;
+            var outputWorkspace2 = (IWorkspace2)output;
 
             // check if the feature class and table exist in the file geodatabase - if so rename them before adding new data
             if (EsriHelper.NameExists(outputWorkspace2, GeocodeRoadsFeatureClassName, esriDatasetType.esriDTFeatureClass))
@@ -150,7 +150,7 @@ STREETNAME <> '' and STREETNAME not like '%ROUNDABOUT%'";
                 var renameFeatureClass = outputFeatureWorkspace.OpenFeatureClass(GeocodeRoadsFeatureClassName);
                 // releaser.ManageLifetime(renameFeatureClass);
 
-                var outputDataset = (IDataset) renameFeatureClass;
+                var outputDataset = (IDataset)renameFeatureClass;
                 outputDataset.Rename(string.Format("{0}{1}{2}", GeocodeRoadsFeatureClassName, "ReplacedOn", DateTime.Now.ToString("yyyyMMdd")));
             }
 
@@ -160,7 +160,7 @@ STREETNAME <> '' and STREETNAME not like '%ROUNDABOUT%'";
                 var renameTable = outputFeatureWorkspace.OpenTable(GeocodeRoadsTableName);
                 // releaser.ManageLifetime(renameTable);
 
-                var outputDataset = (IDataset) renameTable;
+                var outputDataset = (IDataset)renameTable;
                 outputDataset.Rename(string.Format("{0}{1}{2}", GeocodeRoadsTableName, "ReplacedOn", DateTime.Now.ToString("yyyyMMdd")));
             }
 
@@ -176,7 +176,7 @@ STREETNAME <> '' and STREETNAME not like '%ROUNDABOUT%'";
 
         private static void RemoveKeys(IDictionary<string, IndexFieldValue> streetValueMap)
         {
-            var unused = new[] {"ALIAS1", "ALIAS2", "ALIAS1TYPE", "ALIAS2TYPE", "ACSNAME", "ACSSUF"};
+            var unused = new[] { "ALIAS1", "ALIAS2", "ALIAS1TYPE", "ALIAS2TYPE", "ACSNAME", "ACSSUF" };
 
             foreach (var key in unused)
             {

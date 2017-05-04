@@ -67,14 +67,14 @@ namespace RoadGrinder.services
             IWorkspaceFactory workspaceFactory = new FileGDBWorkspaceFactoryClass();
 
             // check if file geodatabase exists, before creating it
-            if (!(workspaceFactory.IsWorkspace(strFgdPath + strFgdName)))
+            if (!(workspaceFactory.IsWorkspace(strFgdPath + strFgdName + ".gdb")))
             {
                 workspaceName = workspaceFactory.Create(strFgdPath, strFgdName, null, 0);
             }
             else
             {
                 IFileNames arcFileNames = new FileNames();
-                arcFileNames.Add(strFgdPath + strFgdName);
+                arcFileNames.Add(strFgdPath + strFgdName + ".gdb");
                 workspaceName = workspaceFactory.GetWorkspaceName(strFgdPath, arcFileNames);
             }
 
@@ -415,22 +415,48 @@ namespace RoadGrinder.services
 
         #region "insert row into geodatabase"
 
-        public static void InsertFeatureInto(IFeature feature, IFeatureClass fc, Dictionary<string, IndexFieldValue> fieldValues)
+        public static void InsertFeatureInto(IFeature feature, IFeatureClass fc, Dictionary<string, IndexFieldValue> fieldValues, bool bln_StType)
         {
             try
             {
                 var newFeature = fc.CreateFeature();
-                var shape = newFeature.ShapeCopy;
+                var shape = feature.ShapeCopy;
 
-                var simpleShape = (IFeatureSimplify) shape;
-                simpleShape.SimplifyGeometry(shape);
+                // var simpleShape = (IFeatureSimplify) shape;
+                // simpleShape.SimplifyGeometry(shape);
 
                 newFeature.Shape = shape;
 
-                foreach (var fieldValue in fieldValues)
+                // this commented area can be used when we are using the new roads schema - aka: when both schemas are the same
+                //foreach (var fieldValue in fieldValues)
+                //{
+                //    newFeature.set_Value(newFeature.Fields.FindField(fieldValue.Key), fieldValue.Value.Value);
+
+                //}
+
+                // for now we might have to use this format - begin...
+                newFeature.set_Value(newFeature.Fields.FindField("ADDRSYS_L"), fieldValues["ADDR_SYS"].Value);
+                newFeature.set_Value(newFeature.Fields.FindField("ADDRSYS_R"), fieldValues["ADDR_SYS"].Value);
+                newFeature.set_Value(newFeature.Fields.FindField("FROMADDR_L"), fieldValues["L_F_ADD"].Value);
+                newFeature.set_Value(newFeature.Fields.FindField("TOADDR_L"), fieldValues["L_T_ADD"].Value);
+                newFeature.set_Value(newFeature.Fields.FindField("FROMADDR_R"), fieldValues["R_F_ADD"].Value);
+                newFeature.set_Value(newFeature.Fields.FindField("TOADDR_R"), fieldValues["R_T_ADD"].Value);
+                newFeature.set_Value(newFeature.Fields.FindField("PREDIR"), fieldValues["PREDIR"].Value);
+                newFeature.set_Value(newFeature.Fields.FindField("NAME"), fieldValues["STREETNAME"].Value);
+                newFeature.set_Value(newFeature.Fields.FindField("POSTDIR"), fieldValues["SUFDIR"].Value);
+                newFeature.set_Value(newFeature.Fields.FindField("ZIPCODE_L"), fieldValues["ZIPLEFT"].Value);
+                newFeature.set_Value(newFeature.Fields.FindField("ZIPCODE_R"), fieldValues["ZIPRIGHT"].Value);
+                newFeature.set_Value(newFeature.Fields.FindField("GLOBALID_SGID"), fieldValues["GLOBALID"].Value);
+
+                if (bln_StType)
                 {
-                    newFeature.set_Value(fieldValue.Value.Index, fieldValue.Value);
+                    newFeature.set_Value(newFeature.Fields.FindField("POSTTYPE"), fieldValues["STREETTYPE"].Value);
                 }
+                else
+                {
+                    newFeature.set_Value(newFeature.Fields.FindField("POSTTYPE"), string.Empty);
+                }
+                // for now we might have to use this format - ...end
 
                 newFeature.Store();
             }
