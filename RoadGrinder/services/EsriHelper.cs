@@ -413,9 +413,8 @@ namespace RoadGrinder.services
 
         // insert new row/record in the geocode file geodatabase
 
-        #region "insert row into geodatabase"
-
-        public static void InsertFeatureInto(IFeature feature, IFeatureClass fc, Dictionary<string, IndexFieldValue> fieldValues, bool bln_StType)
+        #region "insert feature into feature class"
+        public static void InsertFeatureInto(IFeature feature, IFeatureClass fc, Dictionary<string, IndexFieldValue> fieldValues, bool needsStreetType)
         {
             try
             {
@@ -448,7 +447,7 @@ namespace RoadGrinder.services
                 newFeature.set_Value(newFeature.Fields.FindField("ZIPCODE_R"), fieldValues["ZIPRIGHT"].Value);
                 newFeature.set_Value(newFeature.Fields.FindField("GLOBALID_SGID"), fieldValues["GLOBALID"].Value);
 
-                if (bln_StType)
+                if (needsStreetType)
                 {
                     newFeature.set_Value(newFeature.Fields.FindField("POSTTYPE"), fieldValues["STREETTYPE"].Value);
                 }
@@ -469,5 +468,26 @@ namespace RoadGrinder.services
             }
         }
         #endregion
+
+        #region "Insert row into table"
+        public static void InsertRowInto()
+        {
+            try
+            {
+
+
+
+
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(
+                    "There was an error with InsertRowInto method." +
+                    ex.Message + " " + ex.Source + " " + ex.InnerException + " " + ex.HResult + " " + ex.StackTrace + " " + ex);
+                Console.ReadLine();
+            }
+        }
+        #endregion
+
     }
 }

@@ -12,10 +12,11 @@ namespace RoadGrinder.grinders
     public class AlternateNamesGrinder : IGrindable
     {
         private const string GeocodeRoadsFeatureClassName = "GeocodeRoads";
-        private const string GeocodeRoadsTableName = "GeocodeRoadAtlNames";
+        private const string GeocodeRoadsTableName = "AtlNames";
         private readonly CliOptions _options;
         private readonly IFeatureClass _roads;
         private IFeatureClass _geocodeRoads;
+        private ITable _altnameTable;
 
         public AlternateNamesGrinder(IFeatureClass source, CliOptions options)
         {
@@ -45,16 +46,20 @@ namespace RoadGrinder.grinders
                     WhereClause = geocodableRoads
                 };
 
-                // create a ComReleaser for feature cursor's life-cycle management
                 outputEditWorkspace = (IWorkspaceEdit)outputFeatureWorkspace;
+                // begin an edit session on the file geodatabase (maybe) that way we can roll back if it errors out
+                outputEditWorkspace.StartEditing(false);
+                outputEditWorkspace.StartEditOperation();
+                
+                // create a ComReleaser for feature cursor's life-cycle management                
                 using (var comReleaser = new ComReleaser())
                 {
                     var roadsCursor = _roads.Search(roadsFilter, false);
                     comReleaser.ManageLifetime(roadsCursor);
 
                     // begin an edit session on the file geodatabase (maybe) that way we can roll back if it errors out
-                    outputEditWorkspace.StartEditing(false);
-                    outputEditWorkspace.StartEditOperation();
+                    //outputEditWorkspace.StartEditing(false);
+                    //outputEditWorkspace.StartEditOperation();
 
                     IFeature roadFeature;
                     var fieldIndexMap = new FindIndexByNameCommand(_roads, new[]
@@ -119,9 +124,93 @@ namespace RoadGrinder.grinders
                         }
                     }
 
-                    outputEditWorkspace.StopEditOperation();
-                    outputEditWorkspace.StopEditing(true);
+//                    outputEditWorkspace.StopEditOperation();
+//                    outputEditWorkspace.StopEditing(true);
                 }
+
+                // create the altnames table
+                // get feature cursor of newly-created derived-roads fgdb feature class
+                using (var comReleaser = new ComReleaser())
+                {
+                    var geocodeRoadsCursor = _geocodeRoads.Search(null, false);
+                    comReleaser.ManageLifetime(geocodeRoadsCursor);
+
+                    IFeature geocodeRoadFeature;
+
+                    // loop through the geocode roads feature cursor
+                    while ((geocodeRoadFeature = geocodeRoadsCursor.NextFeature()) != null)
+                    {
+                        // check if this segment is found in another address quad, within the same address grid
+                        using (var comReleaser2 = new ComReleaser())
+                        {
+                            // set up query filter 
+                            var geocodeRoadsFilter = new QueryFilter
+                            {
+                                WhereClause = @"(ADDRSYS_L = '" + geocodeRoadFeature.get_Value(geocodeRoadFeature.Fields.FindField(("ADDRSYS_L"))).ToString() + @"' AND 
+                                                ADDRSYS_R = '" + geocodeRoadFeature.get_Value(geocodeRoadFeature.Fields.FindField(("ADDRSYS_R"))).ToString() + @"' AND 
+                                                NAME = '" + geocodeRoadFeature.get_Value(geocodeRoadFeature.Fields.FindField(("NAME"))).ToString() + @"' AND 
+                                                POSTTYPE = '" + geocodeRoadFeature.get_Value(geocodeRoadFeature.Fields.FindField(("POSTTYPE"))).ToString() + @"' AND 
+                                                POSTDIR = '" + geocodeRoadFeature.get_Value(geocodeRoadFeature.Fields.FindField(("POSTDIR"))).ToString() + @"' AND 
+                                                PREDIR <> '" + geocodeRoadFeature.get_Value(geocodeRoadFeature.Fields.FindField(("PREDIR"))).ToString() + @"') AND 
+                                                ((FROMADDR_L >= " + geocodeRoadFeature.get_Value(geocodeRoadFeature.Fields.FindField(("FROMADDR_L"))) + @" AND TOADDR_L <= " + geocodeRoadFeature.get_Value(geocodeRoadFeature.Fields.FindField(("TOADDR_L"))) + @") OR 
+                                                (FROMADDR_R  >= " + geocodeRoadFeature.get_Value(geocodeRoadFeature.Fields.FindField(("FROMADDR_R"))) + @" AND TOADDR_R <= " + geocodeRoadFeature.get_Value(geocodeRoadFeature.Fields.FindField(("TOADDR_R"))) + @"))"
+                            };
+
+                            //(ADDRSYS_L = 'SALT LAKE CITY' AND 
+                            //ADDRSYS_R = 'SALT LAKE CITY' AND 
+                            //NAME = '200' AND 
+                            //POSTTYPE = '' AND 
+                            //POSTDIR = 'W' AND 
+                            //PREDIR <> 'N') AND 
+                            //((FROMADDR_L >= 1 AND TOADDR_L <= 99) OR (FROMADDR_R  >= 2 AND TOADDR_R <= 98))
+
+                            var roadCrossesQuadFeatureCursor = _geocodeRoads.Search(geocodeRoadsFilter, false);
+                            comReleaser2.ManageLifetime(roadCrossesQuadFeatureCursor);
+
+                            // Check if matching seg was found.
+                            var roadCrossesQuadFeature = roadCrossesQuadFeatureCursor.NextFeature();
+
+                            // Check if a segment was found in another quad with the same characteristics.
+                            if (roadCrossesQuadFeature != null)
+                            {
+                                // A feature was found.
+                                while (roadCrossesQuadFeature != null)
+                                {
+                                    // Advance to the next feature in the cursor.
+                                    roadCrossesQuadFeature = roadCrossesQuadFeatureCursor.NextFeature();
+                                }
+                            }
+                            else
+                            {
+                                // A matching feature was not found.
+                                // Add a record to the table without a predir.
+
+
+
+                            }
+
+
+                            //while ((roadCrossesQuadFeature = roadCrossesQuadCursor.NextFeature()) != null)
+                            //{
+
+
+                            //}
+                        }
+
+
+
+
+
+
+
+
+
+                    }
+                }
+
+                // stop editing
+                outputEditWorkspace.StopEditOperation();
+                outputEditWorkspace.StopEditing(true);
             }
             finally
             {
@@ -151,7 +240,7 @@ namespace RoadGrinder.grinders
                 // releaser.ManageLifetime(renameFeatureClass);
 
                 var outputDataset = (IDataset)renameFeatureClass;
-                outputDataset.Rename(string.Format("{0}{1}{2}", GeocodeRoadsFeatureClassName, "ReplacedOn", DateTime.Now.ToString("yyyyMMdd")));
+                outputDataset.Rename(string.Format("{0}{1}{2:yyyyMMdd}", GeocodeRoadsFeatureClassName, "ReplacedOn", DateTime.Now));
             }
 
             if (EsriHelper.NameExists(outputWorkspace2, GeocodeRoadsTableName, esriDatasetType.esriDTTable))
@@ -165,11 +254,10 @@ namespace RoadGrinder.grinders
             }
 
             // create a feature class in the newly-created file geodatabase
-            _geocodeRoads = EsriHelper.CreateFeatureClass(GeocodeRoadsFeatureClassName, null,
-                outputFeatureWorkspace);
+            _geocodeRoads = EsriHelper.CreateFeatureClass(GeocodeRoadsFeatureClassName, null, outputFeatureWorkspace);
 
             // create a table in the newly-created file geodatabase
-            var altNames = EsriHelper.CreateTable(GeocodeRoadsTableName, null, outputFeatureWorkspace);
+            _altnameTable = EsriHelper.CreateTable(GeocodeRoadsTableName, null, outputFeatureWorkspace);
 
             return output;
         }
@@ -183,5 +271,6 @@ namespace RoadGrinder.grinders
                 streetValueMap.Remove(key);
             }
         }
+
     }
 }
