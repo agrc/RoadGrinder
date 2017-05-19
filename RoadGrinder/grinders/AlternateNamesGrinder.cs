@@ -35,7 +35,7 @@ namespace RoadGrinder.grinders
                 // create a feature cursor from the source roads data and loop through this subset
                 // create the query filter to filter results
                 // FOR TESTING...                 
-                const string geocodableRoads = @"ADDR_SYS = 'SALT LAKE CITY' and CARTOCODE not in ('1','7','99') and 
+                const string geocodableRoads = @"ADDR_SYS = 'ALPINE' and CARTOCODE not in ('1','7','99') and 
                                                     ((L_F_ADD <> 0 and L_T_ADD <> 0) OR (R_F_ADD <> 0 and R_T_ADD <> 0)) and 
                                                     STREETNAME <> '' and STREETNAME not like '%ROUNDABOUT%'";
 
@@ -143,6 +143,14 @@ namespace RoadGrinder.grinders
                         // check if this segment is found in another address quad, within the same address grid
                         using (var comReleaser2 = new ComReleaser())
                         {
+                            var fieldIndexMapNewSchema = new FindIndexByNameCommand(_geocodeRoads, new[]
+                            {
+                                "ADDRSYS_L", "ADDRSYS_R", "FROMADDR_L", "TOADDR_L", "FROMADDR_R", "TOADDR_R",
+                                "PREDIR", "NAME", "POSTTYPE", "POSTDIR", "ZIPCODE_L", "ZIPCODE_R", "GLOBALID_SGID"
+                            }).Execute();
+
+                            var valueMapNewSchema = new AddValueToIndexFieldMapCommand(fieldIndexMapNewSchema, geocodeRoadFeature).Execute();
+
                             // set up query filter 
                             var geocodeRoadsFilter = new QueryFilter
                             {
@@ -152,17 +160,11 @@ namespace RoadGrinder.grinders
                                                 POSTTYPE = '" + geocodeRoadFeature.get_Value(geocodeRoadFeature.Fields.FindField(("POSTTYPE"))).ToString() + @"' AND 
                                                 POSTDIR = '" + geocodeRoadFeature.get_Value(geocodeRoadFeature.Fields.FindField(("POSTDIR"))).ToString() + @"' AND 
                                                 PREDIR <> '" + geocodeRoadFeature.get_Value(geocodeRoadFeature.Fields.FindField(("PREDIR"))).ToString() + @"') AND 
-                                                ((FROMADDR_L >= " + geocodeRoadFeature.get_Value(geocodeRoadFeature.Fields.FindField(("FROMADDR_L"))) + @" AND TOADDR_L <= " + geocodeRoadFeature.get_Value(geocodeRoadFeature.Fields.FindField(("TOADDR_L"))) + @") OR 
-                                                (FROMADDR_R  >= " + geocodeRoadFeature.get_Value(geocodeRoadFeature.Fields.FindField(("FROMADDR_R"))) + @" AND TOADDR_R <= " + geocodeRoadFeature.get_Value(geocodeRoadFeature.Fields.FindField(("TOADDR_R"))) + @"))"
+                                                (((FROMADDR_L BETWEEN " + geocodeRoadFeature.get_Value(geocodeRoadFeature.Fields.FindField(("FROMADDR_L"))) + @" AND " + geocodeRoadFeature.get_Value(geocodeRoadFeature.Fields.FindField(("TOADDR_L"))) + @") OR 
+                                                (TOADDR_L BETWEEN " + geocodeRoadFeature.get_Value(geocodeRoadFeature.Fields.FindField(("FROMADDR_L"))) + @" AND " + geocodeRoadFeature.get_Value(geocodeRoadFeature.Fields.FindField(("TOADDR_L"))) + @")) OR
+                                                ((FROMADDR_R BETWEEN " + geocodeRoadFeature.get_Value(geocodeRoadFeature.Fields.FindField(("FROMADDR_R"))) + @" AND " + geocodeRoadFeature.get_Value(geocodeRoadFeature.Fields.FindField(("TOADDR_R"))) + @") OR 
+                                                (TOADDR_R BETWEEN " + geocodeRoadFeature.get_Value(geocodeRoadFeature.Fields.FindField(("FROMADDR_R"))) + @" AND " + geocodeRoadFeature.get_Value(geocodeRoadFeature.Fields.FindField(("TOADDR_R"))) + @")))"
                             };
-
-                            //(ADDRSYS_L = 'SALT LAKE CITY' AND 
-                            //ADDRSYS_R = 'SALT LAKE CITY' AND 
-                            //NAME = '200' AND 
-                            //POSTTYPE = '' AND 
-                            //POSTDIR = 'W' AND 
-                            //PREDIR <> 'N') AND 
-                            //((FROMADDR_L >= 1 AND TOADDR_L <= 99) OR (FROMADDR_R  >= 2 AND TOADDR_R <= 98))
 
                             var roadCrossesQuadFeatureCursor = _geocodeRoads.Search(geocodeRoadsFilter, false);
                             comReleaser2.ManageLifetime(roadCrossesQuadFeatureCursor);
@@ -184,9 +186,10 @@ namespace RoadGrinder.grinders
                             {
                                 // A matching feature was not found.
                                 // Add a record to the table without a predir.
-
-
-
+                                // Remove the PREDIR value from the field map
+                                var valueMapNewSchemaNoPredir = valueMapNewSchema;
+                                valueMapNewSchemaNoPredir.Remove("PREDIR");
+                                EsriHelper.InsertRowInto(geocodeRoadFeature, _altnameTable, valueMapNewSchema);
                             }
 
 
@@ -196,14 +199,6 @@ namespace RoadGrinder.grinders
 
                             //}
                         }
-
-
-
-
-
-
-
-
 
                     }
                 }

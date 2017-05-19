@@ -330,6 +330,7 @@ namespace RoadGrinder.services
             var predirFieldEdit = (IFieldEdit) predirField;
             predirFieldEdit.Name_2 = "PREDIR";
             predirFieldEdit.Type_2 = esriFieldType.esriFieldTypeString;
+            predirFieldEdit.IsNullable_2 = false;
             predirFieldEdit.Length_2 = 1;
             fieldsEdit.AddField(predirField);
 
@@ -470,14 +471,18 @@ namespace RoadGrinder.services
         #endregion
 
         #region "Insert row into table"
-        public static void InsertRowInto()
+        public static void InsertRowInto(IFeature feature, ITable table, Dictionary<string, IndexFieldValue> fieldValues)
         {
             try
             {
+                var newRow = table.CreateRow();
 
+                foreach (var fieldValue in fieldValues)
+                {
+                    newRow.set_Value(newRow.Fields.FindField(fieldValue.Key), fieldValue.Value.Value);
+                }
 
-
-
+                newRow.Store();
             }
             catch (Exception ex)
             {
