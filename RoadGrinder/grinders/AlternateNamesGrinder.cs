@@ -35,7 +35,7 @@ namespace RoadGrinder.grinders
                 // create a feature cursor from the source roads data and loop through this subset
                 // create the query filter to filter results
                 // FOR TESTING...                 
-                const string geocodableRoads = @"ADDR_SYS = 'ALPINE' and CARTOCODE not in ('1','7','99') and 
+                const string geocodableRoads = @"ADDR_SYS = 'MOAB' and CARTOCODE not in ('1','7','99') and 
                                                     ((L_F_ADD <> 0 and L_T_ADD <> 0) OR (R_F_ADD <> 0 and R_T_ADD <> 0)) and 
                                                     STREETNAME <> '' and STREETNAME not like '%ROUNDABOUT%'";
 
@@ -132,7 +132,11 @@ namespace RoadGrinder.grinders
                 // get feature cursor of newly-created derived-roads fgdb feature class
                 using (var comReleaser = new ComReleaser())
                 {
-                    var geocodeRoadsCursor = _geocodeRoads.Search(null, false);
+                    // Set up where clause to omit the records without a predir - as they are already in the database without a predir
+                    var omitPredirQueryFilter = new QueryFilter {WhereClause = @"PREDIR <> ''"};
+
+
+                    var geocodeRoadsCursor = _geocodeRoads.Search(omitPredirQueryFilter, false);
                     comReleaser.ManageLifetime(geocodeRoadsCursor);
 
                     IFeature geocodeRoadFeature;
@@ -184,6 +188,9 @@ namespace RoadGrinder.grinders
                             }
                             else
                             {
+                                //////// figure out what to do if the source road does not have a predir but then finds a matching seg with a predir in another quad 
+                                
+                                Console.WriteLine("this oid was not found in the other grid: " + geocodeRoadFeature.get_Value(geocodeRoadFeature.Fields.FindField("OBJECTID")).ToString());
                                 // A matching feature was not found.
                                 // Add a record to the table without a predir.
                                 // Remove the PREDIR value from the field map
@@ -206,6 +213,7 @@ namespace RoadGrinder.grinders
                 // stop editing
                 outputEditWorkspace.StopEditOperation();
                 outputEditWorkspace.StopEditing(true);
+                Console.ReadLine();
             }
             finally
             {
