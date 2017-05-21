@@ -35,7 +35,7 @@ namespace RoadGrinder.grinders
                 // create a feature cursor from the source roads data and loop through this subset
                 // create the query filter to filter results
                 // FOR TESTING...                 
-                const string geocodableRoads = @"ADDR_SYS = 'MOAB' and CARTOCODE not in ('1','7','99') and 
+                const string geocodableRoads = @"ADDR_SYS = 'SALT LAKE CITY' and CARTOCODE not in ('1','7','99') and 
                                                     ((L_F_ADD <> 0 and L_T_ADD <> 0) OR (R_F_ADD <> 0 and R_T_ADD <> 0)) and 
                                                     STREETNAME <> '' and STREETNAME not like '%ROUNDABOUT%'";
 
@@ -123,18 +123,20 @@ namespace RoadGrinder.grinders
                             EsriHelper.InsertFeatureInto(roadFeature, _geocodeRoads, acsValueMap, false);
                         }
                     }
-
-//                    outputEditWorkspace.StopEditOperation();
-//                    outputEditWorkspace.StopEditing(true);
+                    outputEditWorkspace.StopEditOperation();
+                    outputEditWorkspace.StopEditing(true);
                 }
 
                 // create the altnames table
                 // get feature cursor of newly-created derived-roads fgdb feature class
                 using (var comReleaser = new ComReleaser())
                 {
+                    int consoleCounter = 0;
+                    outputEditWorkspace.StartEditing(false);
+                    outputEditWorkspace.StartEditOperation();
+         
                     // Set up where clause to omit the records without a predir - as they are already in the database without a predir
                     var omitPredirQueryFilter = new QueryFilter {WhereClause = @"PREDIR <> ''"};
-
 
                     var geocodeRoadsCursor = _geocodeRoads.Search(omitPredirQueryFilter, false);
                     comReleaser.ManageLifetime(geocodeRoadsCursor);
@@ -179,6 +181,8 @@ namespace RoadGrinder.grinders
                             // Check if a segment was found in another quad with the same characteristics.
                             if (roadCrossesQuadFeature != null)
                             {
+                                consoleCounter = consoleCounter + 1;
+                                Console.WriteLine(consoleCounter + ": found in the other grid: " + geocodeRoadFeature.get_Value(geocodeRoadFeature.Fields.FindField("OBJECTID")).ToString());
                                 // A feature was found.
                                 while (roadCrossesQuadFeature != null)
                                 {
@@ -188,9 +192,12 @@ namespace RoadGrinder.grinders
                             }
                             else
                             {
-                                //////// figure out what to do if the source road does not have a predir but then finds a matching seg with a predir in another quad 
                                 
-                                Console.WriteLine("this oid was not found in the other grid: " + geocodeRoadFeature.get_Value(geocodeRoadFeature.Fields.FindField("OBJECTID")).ToString());
+                                //////// figure out what to do if the source road does not have a predir but then finds a matching seg with a predir in another quad 
+                                // save edits after the geocode table is done, before we start the altnames table
+                                
+                                consoleCounter = consoleCounter + 1;
+                                Console.WriteLine(consoleCounter + ": not found in the other grid: " + geocodeRoadFeature.get_Value(geocodeRoadFeature.Fields.FindField("OBJECTID")).ToString());
                                 // A matching feature was not found.
                                 // Add a record to the table without a predir.
                                 // Remove the PREDIR value from the field map
@@ -208,11 +215,11 @@ namespace RoadGrinder.grinders
                         }
 
                     }
+                    // stop editing from altnames table
+                    outputEditWorkspace.StopEditOperation();
+                    outputEditWorkspace.StopEditing(true);
                 }
 
-                // stop editing
-                outputEditWorkspace.StopEditOperation();
-                outputEditWorkspace.StopEditing(true);
                 Console.ReadLine();
             }
             finally
