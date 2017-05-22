@@ -35,7 +35,7 @@ namespace RoadGrinder.grinders
                 // create a feature cursor from the source roads data and loop through this subset
                 // create the query filter to filter results
                 // FOR TESTING...                 
-                const string geocodableRoads = @"ADDR_SYS = 'SALT LAKE CITY' and CARTOCODE not in ('1','7','99') and 
+                const string geocodableRoads = @"ADDR_SYS = 'PROVO' and CARTOCODE not in ('1','7','99') and 
                                                     ((L_F_ADD <> 0 and L_T_ADD <> 0) OR (R_F_ADD <> 0 and R_T_ADD <> 0)) and 
                                                     STREETNAME <> '' and STREETNAME not like '%ROUNDABOUT%'";
 
@@ -128,6 +128,7 @@ namespace RoadGrinder.grinders
                 }
 
                 // create the altnames table
+                Console.WriteLine("begin altnames table");
                 // get feature cursor of newly-created derived-roads fgdb feature class
                 using (var comReleaser = new ComReleaser())
                 {
@@ -158,36 +159,114 @@ namespace RoadGrinder.grinders
                             var valueMapNewSchema = new AddValueToIndexFieldMapCommand(fieldIndexMapNewSchema, geocodeRoadFeature).Execute();
 
                             // set up query filter 
-                            var geocodeRoadsFilter = new QueryFilter
+                            var possibleCandidatesFilter = new QueryFilter
                             {
+//                                WhereClause = @"(ADDRSYS_L = '" + geocodeRoadFeature.get_Value(geocodeRoadFeature.Fields.FindField(("ADDRSYS_L"))).ToString() + @"' AND 
+//                                                ADDRSYS_R = '" + geocodeRoadFeature.get_Value(geocodeRoadFeature.Fields.FindField(("ADDRSYS_R"))).ToString() + @"' AND 
+//                                                NAME = '" + geocodeRoadFeature.get_Value(geocodeRoadFeature.Fields.FindField(("NAME"))).ToString() + @"' AND 
+//                                                POSTTYPE = '" + geocodeRoadFeature.get_Value(geocodeRoadFeature.Fields.FindField(("POSTTYPE"))).ToString() + @"' AND 
+//                                                POSTDIR = '" + geocodeRoadFeature.get_Value(geocodeRoadFeature.Fields.FindField(("POSTDIR"))).ToString() + @"' AND 
+//                                                PREDIR <> '" + geocodeRoadFeature.get_Value(geocodeRoadFeature.Fields.FindField(("PREDIR"))).ToString() + @"') AND 
+//                                                (((FROMADDR_L BETWEEN " + geocodeRoadFeature.get_Value(geocodeRoadFeature.Fields.FindField(("FROMADDR_L"))) + @" AND " + geocodeRoadFeature.get_Value(geocodeRoadFeature.Fields.FindField(("TOADDR_L"))) + @") OR 
+//                                                (TOADDR_L BETWEEN " + geocodeRoadFeature.get_Value(geocodeRoadFeature.Fields.FindField(("FROMADDR_L"))) + @" AND " + geocodeRoadFeature.get_Value(geocodeRoadFeature.Fields.FindField(("TOADDR_L"))) + @")) OR
+//                                                ((FROMADDR_R BETWEEN " + geocodeRoadFeature.get_Value(geocodeRoadFeature.Fields.FindField(("FROMADDR_R"))) + @" AND " + geocodeRoadFeature.get_Value(geocodeRoadFeature.Fields.FindField(("TOADDR_R"))) + @") OR 
+//                                                (TOADDR_R BETWEEN " + geocodeRoadFeature.get_Value(geocodeRoadFeature.Fields.FindField(("FROMADDR_R"))) + @" AND " + geocodeRoadFeature.get_Value(geocodeRoadFeature.Fields.FindField(("TOADDR_R"))) + @")))"
+//                            };
+
                                 WhereClause = @"(ADDRSYS_L = '" + geocodeRoadFeature.get_Value(geocodeRoadFeature.Fields.FindField(("ADDRSYS_L"))).ToString() + @"' AND 
                                                 ADDRSYS_R = '" + geocodeRoadFeature.get_Value(geocodeRoadFeature.Fields.FindField(("ADDRSYS_R"))).ToString() + @"' AND 
                                                 NAME = '" + geocodeRoadFeature.get_Value(geocodeRoadFeature.Fields.FindField(("NAME"))).ToString() + @"' AND 
                                                 POSTTYPE = '" + geocodeRoadFeature.get_Value(geocodeRoadFeature.Fields.FindField(("POSTTYPE"))).ToString() + @"' AND 
                                                 POSTDIR = '" + geocodeRoadFeature.get_Value(geocodeRoadFeature.Fields.FindField(("POSTDIR"))).ToString() + @"' AND 
-                                                PREDIR <> '" + geocodeRoadFeature.get_Value(geocodeRoadFeature.Fields.FindField(("PREDIR"))).ToString() + @"') AND 
-                                                (((FROMADDR_L BETWEEN " + geocodeRoadFeature.get_Value(geocodeRoadFeature.Fields.FindField(("FROMADDR_L"))) + @" AND " + geocodeRoadFeature.get_Value(geocodeRoadFeature.Fields.FindField(("TOADDR_L"))) + @") OR 
-                                                (TOADDR_L BETWEEN " + geocodeRoadFeature.get_Value(geocodeRoadFeature.Fields.FindField(("FROMADDR_L"))) + @" AND " + geocodeRoadFeature.get_Value(geocodeRoadFeature.Fields.FindField(("TOADDR_L"))) + @")) OR
-                                                ((FROMADDR_R BETWEEN " + geocodeRoadFeature.get_Value(geocodeRoadFeature.Fields.FindField(("FROMADDR_R"))) + @" AND " + geocodeRoadFeature.get_Value(geocodeRoadFeature.Fields.FindField(("TOADDR_R"))) + @") OR 
-                                                (TOADDR_R BETWEEN " + geocodeRoadFeature.get_Value(geocodeRoadFeature.Fields.FindField(("FROMADDR_R"))) + @" AND " + geocodeRoadFeature.get_Value(geocodeRoadFeature.Fields.FindField(("TOADDR_R"))) + @")))"
+                                                PREDIR <> '" + geocodeRoadFeature.get_Value(geocodeRoadFeature.Fields.FindField(("PREDIR"))).ToString() + @"')"
                             };
 
-                            var roadCrossesQuadFeatureCursor = _geocodeRoads.Search(geocodeRoadsFilter, false);
-                            comReleaser2.ManageLifetime(roadCrossesQuadFeatureCursor);
+                            var possibleCandidatesFeatureCursor = _geocodeRoads.Search(possibleCandidatesFilter, false);
+                            comReleaser2.ManageLifetime(possibleCandidatesFeatureCursor);
 
                             // Check if matching seg was found.
-                            var roadCrossesQuadFeature = roadCrossesQuadFeatureCursor.NextFeature();
+                            var possibleCandidateFeature = possibleCandidatesFeatureCursor.NextFeature();
 
                             // Check if a segment was found in another quad with the same characteristics.
-                            if (roadCrossesQuadFeature != null)
+                            if (possibleCandidateFeature != null)
                             {
-                                consoleCounter = consoleCounter + 1;
-                                Console.WriteLine(consoleCounter + ": found in the other grid: " + geocodeRoadFeature.get_Value(geocodeRoadFeature.Fields.FindField("OBJECTID")).ToString());
+                                bool matchFound = false;
+                                ////Console.WriteLine(consoleCounter + ": found in the other grid: " + geocodeRoadFeature.get_Value(geocodeRoadFeature.Fields.FindField("OBJECTID")).ToString());
                                 // A feature was found.
-                                while (roadCrossesQuadFeature != null)
+                                while (possibleCandidateFeature != null)
                                 {
+                                    using (var comReleaser3 = new ComReleaser())
+                                    {
+                                        // Check if any of the four numbers from the geocodeRoadsFeature class is contained in any of these returned possible candidates
+                                        // Get the lowest and the highest number
+                                        int possibleCandidateOID = Convert.ToInt32(possibleCandidateFeature.get_Value(possibleCandidateFeature.Fields.FindField("OBJECTID")));
+                                        int fromAddrL = Convert.ToInt32(geocodeRoadFeature.get_Value(geocodeRoadFeature.Fields.FindField("FROMADDR_L")));
+                                        int fromAddrR = Convert.ToInt32(geocodeRoadFeature.get_Value(geocodeRoadFeature.Fields.FindField("FROMADDR_R")));
+                                        int toAddrL = Convert.ToInt32(geocodeRoadFeature.get_Value(geocodeRoadFeature.Fields.FindField("TOADDR_L")));
+                                        int toAddrR = Convert.ToInt32(geocodeRoadFeature.get_Value(geocodeRoadFeature.Fields.FindField("TOADDR_R")));                                    
+                                        int highNum; 
+                                        int lowNum;
+                                    
+                                        // Asign the high and low numbers
+                                        if (fromAddrL < fromAddrR)
+                                        {
+                                            lowNum = fromAddrL;
+                                        }
+                                        else
+                                        {
+                                            lowNum = fromAddrR;
+                                        }
+
+                                        if (toAddrL > toAddrR)
+                                        {
+                                            highNum = toAddrL;
+                                        }
+                                        else
+                                        {
+                                            highNum = toAddrR;
+                                        }
+
+                                        // Create a new query filter to see if the high or low number falls within one of these candidate features
+                                        var findMatchFilter = new QueryFilter
+                                        {
+                                            WhereClause = @"OBJECTID = " + possibleCandidateOID + @" AND 
+                                                        (((" + lowNum + @" BETWEEN FROMADDR_L  AND TOADDR_L ) or (" + highNum + @" BETWEEN FROMADDR_L  AND TOADDR_L)) or 
+                                                        ((" + lowNum + @" BETWEEN FROMADDR_R  AND TOADDR_R ) or (" + highNum + @"  BETWEEN FROMADDR_R  AND TOADDR_R)))"
+                                        };
+
+                                        Console.WriteLine("for oid: " + geocodeRoadFeature.get_Value(geocodeRoadFeature.Fields.FindField("OBJECTID")).ToString() + " " +  findMatchFilter.WhereClause.ToString());
+
+                                        var findMatchFeatureCursor = _geocodeRoads.Search(findMatchFilter, false);
+                                        comReleaser3.ManageLifetime(findMatchFeatureCursor);
+
+                                        // Check if matching seg was found.
+                                        var findMatchFeature = findMatchFeatureCursor.NextFeature();
+
+                                        if (findMatchFeature != null)
+                                        {
+                                            // A match was found.  So don't write it to the AltNames table
+                                            Console.WriteLine("match Found: " + findMatchFeature.get_Value(findMatchFeature.Fields.FindField("OBJECTID")).ToString());
+                                            matchFound = true;
+                                            break;
+                                        }
+                                    }
+
                                     // Advance to the next feature in the cursor.
-                                    roadCrossesQuadFeature = roadCrossesQuadFeatureCursor.NextFeature();
+                                    possibleCandidateFeature = possibleCandidatesFeatureCursor.NextFeature();
+                                }
+
+                                // Write to the AltNames table > match was not found
+                                if (matchFound == false)
+                                {
+                                    // A matching feature was not found.
+                                    // Add a record to the table without a predir.
+                                    // Remove the PREDIR value from the field map
+                                    var valueMapNewSchemaNoPredir = valueMapNewSchema;
+                                    valueMapNewSchemaNoPredir.Remove("PREDIR");
+                                    EsriHelper.InsertRowInto(geocodeRoadFeature, _altnameTable, valueMapNewSchema);
+
+                                    consoleCounter = consoleCounter + 1;
+                                    Console.WriteLine(consoleCounter + ": not found in the other grid: " + geocodeRoadFeature.get_Value(geocodeRoadFeature.Fields.FindField("OBJECTID")).ToString());
                                 }
                             }
                             else
@@ -196,14 +275,14 @@ namespace RoadGrinder.grinders
                                 //////// figure out what to do if the source road does not have a predir but then finds a matching seg with a predir in another quad 
                                 // save edits after the geocode table is done, before we start the altnames table
                                 
-                                consoleCounter = consoleCounter + 1;
-                                Console.WriteLine(consoleCounter + ": not found in the other grid: " + geocodeRoadFeature.get_Value(geocodeRoadFeature.Fields.FindField("OBJECTID")).ToString());
-                                // A matching feature was not found.
-                                // Add a record to the table without a predir.
-                                // Remove the PREDIR value from the field map
-                                var valueMapNewSchemaNoPredir = valueMapNewSchema;
-                                valueMapNewSchemaNoPredir.Remove("PREDIR");
-                                EsriHelper.InsertRowInto(geocodeRoadFeature, _altnameTable, valueMapNewSchema);
+                                ////consoleCounter = consoleCounter + 1;
+                                ////Console.WriteLine(consoleCounter + ": not found in the other grid: " + geocodeRoadFeature.get_Value(geocodeRoadFeature.Fields.FindField("OBJECTID")).ToString());
+                                ////// A matching feature was not found.
+                                ////// Add a record to the table without a predir.
+                                ////// Remove the PREDIR value from the field map
+                                ////var valueMapNewSchemaNoPredir = valueMapNewSchema;
+                                ////valueMapNewSchemaNoPredir.Remove("PREDIR");
+                                ////EsriHelper.InsertRowInto(geocodeRoadFeature, _altnameTable, valueMapNewSchema);
                             }
 
 
