@@ -190,7 +190,7 @@ namespace RoadGrinder.grinders
                             // Check if a segment was found in another quad with the same characteristics.
                             if (possibleCandidateFeature != null)
                             {
-                                bool matchFound = false;
+                                bool foundMatch = false;
                                 ////Console.WriteLine(consoleCounter + ": found in the other grid: " + geocodeRoadFeature.get_Value(geocodeRoadFeature.Fields.FindField("OBJECTID")).ToString());
                                 // A feature was found.
                                 while (possibleCandidateFeature != null)
@@ -227,27 +227,84 @@ namespace RoadGrinder.grinders
                                         }
 
                                         // Create a new query filter to see if the high or low number falls within one of these candidate features
-                                        var findMatchFilter = new QueryFilter
+                                        var fitsInLargerSegmentFilter = new QueryFilter
                                         {
                                             WhereClause = @"OBJECTID = " + possibleCandidateOID + @" AND 
                                                         (((" + lowNum + @" BETWEEN FROMADDR_L  AND TOADDR_L ) or (" + highNum + @" BETWEEN FROMADDR_L  AND TOADDR_L)) or 
                                                         ((" + lowNum + @" BETWEEN FROMADDR_R  AND TOADDR_R ) or (" + highNum + @"  BETWEEN FROMADDR_R  AND TOADDR_R)))"
                                         };
 
-                                        Console.WriteLine("for oid: " + geocodeRoadFeature.get_Value(geocodeRoadFeature.Fields.FindField("OBJECTID")).ToString() + " " +  findMatchFilter.WhereClause.ToString());
+                                        //Console.WriteLine("for oid: " + geocodeRoadFeature.get_Value(geocodeRoadFeature.Fields.FindField("OBJECTID")).ToString() + " " +  fitsInLargerSegmentFilter.WhereClause.ToString());
 
-                                        var findMatchFeatureCursor = _geocodeRoads.Search(findMatchFilter, false);
-                                        comReleaser3.ManageLifetime(findMatchFeatureCursor);
+                                        var fitsInLargerSegmentFeatureCursor = _geocodeRoads.Search(fitsInLargerSegmentFilter, false);
+                                        comReleaser3.ManageLifetime(fitsInLargerSegmentFeatureCursor);
 
                                         // Check if matching seg was found.
-                                        var findMatchFeature = findMatchFeatureCursor.NextFeature();
+                                        var fitsInLargerFeature = fitsInLargerSegmentFeatureCursor.NextFeature();
 
-                                        if (findMatchFeature != null)
+                                        if (fitsInLargerFeature != null)
                                         {
                                             // A match was found.  So don't write it to the AltNames table
-                                            Console.WriteLine("match Found: " + findMatchFeature.get_Value(findMatchFeature.Fields.FindField("OBJECTID")).ToString());
-                                            matchFound = true;
+                                            Console.WriteLine("fit in larger: " + fitsInLargerFeature.get_Value(fitsInLargerFeature.Fields.FindField("OBJECTID")).ToString());
+                                            foundMatch = true;
                                             break;
+                                        }
+                                        else
+                                        {
+                                            // the current segment's address range did not fit within a larger segment
+                                            // check if a smaller address ranged segment fits into this larger segment
+                                            using (var comReleaser4 = new ComReleaser())
+                                            {
+                                                // Get the lowest and the highest number of the possible candidate
+                                                int geocodeRoadOID_ = Convert.ToInt32(geocodeRoadFeature.get_Value(geocodeRoadFeature.Fields.FindField("OBJECTID")));
+                                                int fromAddrL_ = Convert.ToInt32(possibleCandidateFeature.get_Value(possibleCandidateFeature.Fields.FindField("FROMADDR_L")));
+                                                int fromAddrR_ = Convert.ToInt32(possibleCandidateFeature.get_Value(possibleCandidateFeature.Fields.FindField("FROMADDR_R")));
+                                                int toAddrL_ = Convert.ToInt32(possibleCandidateFeature.get_Value(possibleCandidateFeature.Fields.FindField("TOADDR_L")));
+                                                int toAddrR_ = Convert.ToInt32(possibleCandidateFeature.get_Value(possibleCandidateFeature.Fields.FindField("TOADDR_R")));
+                                                int highNum_;
+                                                int lowNum_;
+
+                                                // Asign the high and low numbers
+                                                if (fromAddrL_ < fromAddrR_)
+                                                {
+                                                    lowNum_ = fromAddrL_;
+                                                }
+                                                else
+                                                {
+                                                    lowNum_ = fromAddrR_;
+                                                }
+
+                                                if (toAddrL_ > toAddrR_)
+                                                {
+                                                    highNum_ = toAddrL_;
+                                                }
+                                                else
+                                                {
+                                                    highNum_ = toAddrR_;
+                                                }
+
+                                                
+                                                var smallerCandidateFitsInFilter = new QueryFilter
+                                                {
+                                                    WhereClause = @"OBJECTID = " + geocodeRoadOID_ + @" AND 
+                                                        (((" + lowNum_ + @" BETWEEN FROMADDR_L  AND TOADDR_L ) or (" + highNum_ + @" BETWEEN FROMADDR_L  AND TOADDR_L)) or 
+                                                        ((" + lowNum_ + @" BETWEEN FROMADDR_R  AND TOADDR_R ) or (" + highNum_ + @"  BETWEEN FROMADDR_R  AND TOADDR_R)))"
+                                                };
+
+                                                var smallerCandidateFitsInFeatureCursor = _geocodeRoads.Search(smallerCandidateFitsInFilter, false);
+                                                comReleaser4.ManageLifetime(smallerCandidateFitsInFeatureCursor);
+
+                                                // Check if matching seg was found.
+                                                var smallerCandidateFitsInFeature = smallerCandidateFitsInFeatureCursor.NextFeature();
+
+                                                if (smallerCandidateFitsInFeature != null)
+                                                {
+                                                    // A match was found.  So don't write it to the AltNames table
+                                                    Console.WriteLine("candidate fit in it: " + smallerCandidateFitsInFeature.get_Value(smallerCandidateFitsInFeature.Fields.FindField("OBJECTID")).ToString());
+                                                    foundMatch = true;
+                                                    break;          
+                                                }
+                                            }
                                         }
                                     }
 
@@ -256,7 +313,7 @@ namespace RoadGrinder.grinders
                                 }
 
                                 // Write to the AltNames table > match was not found
-                                if (matchFound == false)
+                                if (foundMatch == false)
                                 {
                                     // A matching feature was not found.
                                     // Add a record to the table without a predir.
