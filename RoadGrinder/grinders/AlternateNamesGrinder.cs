@@ -26,6 +26,8 @@ namespace RoadGrinder.grinders
 
         public void Grind(IWorkspace output)
         {
+            var startTime = DateTime.Now;
+            Console.WriteLine("Begin creating Geocode FC: " + DateTime.Now);
             IWorkspaceEdit outputEditWorkspace = null;
 
             try
@@ -35,7 +37,7 @@ namespace RoadGrinder.grinders
                 // create a feature cursor from the source roads data and loop through this subset
                 // create the query filter to filter results
                 // FOR TESTING...                 
-                const string geocodableRoads = @"ADDR_SYS = 'PROVO' and CARTOCODE not in ('1','7','99') and 
+                const string geocodableRoads = @"ADDR_SYS = 'LOGAN' and CARTOCODE not in ('1','7','99') and 
                                                     ((L_F_ADD <> 0 and L_T_ADD <> 0) OR (R_F_ADD <> 0 and R_T_ADD <> 0)) and 
                                                     STREETNAME <> '' and STREETNAME not like '%ROUNDABOUT%'";
 
@@ -128,7 +130,7 @@ namespace RoadGrinder.grinders
                 }
 
                 // create the altnames table
-                Console.WriteLine("begin altnames table");
+                Console.WriteLine("begin altnames table: " + DateTime.Now);
                 // get feature cursor of newly-created derived-roads fgdb feature class
                 using (var comReleaser = new ComReleaser())
                 {
@@ -245,7 +247,8 @@ namespace RoadGrinder.grinders
                                         if (fitsInLargerFeature != null)
                                         {
                                             // A match was found.  So don't write it to the AltNames table
-                                            Console.WriteLine("fit in larger: " + fitsInLargerFeature.get_Value(fitsInLargerFeature.Fields.FindField("OBJECTID")).ToString());
+                                            consoleCounter = consoleCounter + 1;
+                                            Console.WriteLine(consoleCounter + ": fit in larger: " + fitsInLargerFeature.get_Value(fitsInLargerFeature.Fields.FindField("OBJECTID")).ToString());
                                             foundMatch = true;
                                             break;
                                         }
@@ -300,7 +303,8 @@ namespace RoadGrinder.grinders
                                                 if (smallerCandidateFitsInFeature != null)
                                                 {
                                                     // A match was found.  So don't write it to the AltNames table
-                                                    Console.WriteLine("candidate fit in it: " + smallerCandidateFitsInFeature.get_Value(smallerCandidateFitsInFeature.Fields.FindField("OBJECTID")).ToString());
+                                                    consoleCounter = consoleCounter + 1;
+                                                    Console.WriteLine(consoleCounter + ": candidate fit within it: " + smallerCandidateFitsInFeature.get_Value(smallerCandidateFitsInFeature.Fields.FindField("OBJECTID")).ToString());
                                                     foundMatch = true;
                                                     break;          
                                                 }
@@ -341,13 +345,6 @@ namespace RoadGrinder.grinders
                                 ////valueMapNewSchemaNoPredir.Remove("PREDIR");
                                 ////EsriHelper.InsertRowInto(geocodeRoadFeature, _altnameTable, valueMapNewSchema);
                             }
-
-
-                            //while ((roadCrossesQuadFeature = roadCrossesQuadCursor.NextFeature()) != null)
-                            //{
-
-
-                            //}
                         }
 
                     }
@@ -356,6 +353,9 @@ namespace RoadGrinder.grinders
                     outputEditWorkspace.StopEditing(true);
                 }
 
+                Console.WriteLine("Started at: " + startTime);
+                Console.WriteLine("Finished at: " + DateTime.Now);
+                Console.WriteLine("Press any key to continue...");
                 Console.ReadLine();
             }
             finally
