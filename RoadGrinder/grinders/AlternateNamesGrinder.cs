@@ -36,8 +36,8 @@ namespace RoadGrinder.grinders
 
                 // create a feature cursor from the source roads data and loop through this subset
                 // create the query filter to filter results
-                // FOR TESTING...                 
-                const string geocodableRoads = @"ADDR_SYS = 'LOGAN' and CARTOCODE not in ('1','7','99') and 
+                // FOR TESTING...
+                const string geocodableRoads = @"ADDR_SYS = 'SALT LAKE CITY' and CARTOCODE not in ('1','7','99') and 
                                                     ((L_F_ADD <> 0 and L_T_ADD <> 0) OR (R_F_ADD <> 0 and R_T_ADD <> 0)) and 
                                                     STREETNAME <> '' and STREETNAME not like '%ROUNDABOUT%'";
 
@@ -139,7 +139,9 @@ namespace RoadGrinder.grinders
                     outputEditWorkspace.StartEditOperation();
          
                     // Set up where clause to omit the records without a predir - as they are already in the database without a predir
-                    var omitPredirQueryFilter = new QueryFilter {WhereClause = @"PREDIR <> ''"};
+                    //var omitPredirQueryFilter = new QueryFilter {WhereClause = @"PREDIR <> ''"};
+                    // this one only gets the alpha named roads to evaluate for the altnames table
+                    var omitPredirQueryFilter = new QueryFilter { WhereClause = @"PREDIR <> '' and (UPPER(""NAME"") <> ""NAME"" OR LOWER(""NAME"") <> ""NAME"")" };
 
                     var geocodeRoadsCursor = _geocodeRoads.Search(omitPredirQueryFilter, false);
                     comReleaser.ManageLifetime(geocodeRoadsCursor);
@@ -188,11 +190,12 @@ namespace RoadGrinder.grinders
 
                             // Check if matching seg was found.
                             var possibleCandidateFeature = possibleCandidatesFeatureCursor.NextFeature();
+                            bool foundMatch = false;
 
                             // Check if a segment was found in another quad with the same characteristics.
                             if (possibleCandidateFeature != null)
                             {
-                                bool foundMatch = false;
+
                                 ////Console.WriteLine(consoleCounter + ": found in the other grid: " + geocodeRoadFeature.get_Value(geocodeRoadFeature.Fields.FindField("OBJECTID")).ToString());
                                 // A feature was found.
                                 while (possibleCandidateFeature != null)
@@ -208,15 +211,29 @@ namespace RoadGrinder.grinders
                                         int toAddrR = Convert.ToInt32(geocodeRoadFeature.get_Value(geocodeRoadFeature.Fields.FindField("TOADDR_R")));                                    
                                         int highNum; 
                                         int lowNum;
-                                    
-                                        // Asign the high and low numbers
-                                        if (fromAddrL < fromAddrR)
+
+                                        // Asign the high and low numbers (make sure the low is not zero)
+                                        if (fromAddrL == 0 || fromAddrR == 0)
                                         {
-                                            lowNum = fromAddrL;
+                                            if (fromAddrL == 0)
+                                            {
+                                                lowNum = fromAddrR;
+                                            }
+                                            else
+                                            {
+                                                lowNum = fromAddrL;
+                                            }
                                         }
                                         else
                                         {
-                                            lowNum = fromAddrR;
+                                            if (fromAddrL < fromAddrR)
+                                            {
+                                                lowNum = fromAddrL;
+                                            }
+                                            else
+                                            {
+                                                lowNum = fromAddrR;
+                                            }
                                         }
 
                                         if (toAddrL > toAddrR)
@@ -267,16 +284,30 @@ namespace RoadGrinder.grinders
                                                 int highNum_;
                                                 int lowNum_;
 
-                                                // Asign the high and low numbers
-                                                if (fromAddrL_ < fromAddrR_)
+                                                // Asign the high and low numbers (make sure the low is not zero)
+                                                if (fromAddrL_ == 0 || fromAddrR_ == 0)
                                                 {
-                                                    lowNum_ = fromAddrL_;
+                                                    if (fromAddrL_ == 0)
+                                                    {
+                                                        lowNum_ = fromAddrR_;
+                                                    }
+                                                    else
+                                                    {
+                                                        lowNum_ = fromAddrL_;
+                                                    }
                                                 }
                                                 else
                                                 {
-                                                    lowNum_ = fromAddrR_;
+                                                    if (fromAddrL_ < fromAddrR_)
+                                                    {
+                                                        lowNum_ = fromAddrL_;
+                                                    }
+                                                    else
+                                                    {
+                                                        lowNum_ = fromAddrR_;
+                                                    }
                                                 }
-
+                                                
                                                 if (toAddrL_ > toAddrR_)
                                                 {
                                                     highNum_ = toAddrL_;
@@ -315,38 +346,26 @@ namespace RoadGrinder.grinders
                                     // Advance to the next feature in the cursor.
                                     possibleCandidateFeature = possibleCandidatesFeatureCursor.NextFeature();
                                 }
-
-                                // Write to the AltNames table > match was not found
-                                if (foundMatch == false)
-                                {
-                                    // A matching feature was not found.
-                                    // Add a record to the table without a predir.
-                                    // Remove the PREDIR value from the field map
-                                    var valueMapNewSchemaNoPredir = valueMapNewSchema;
-                                    valueMapNewSchemaNoPredir.Remove("PREDIR");
-                                    EsriHelper.InsertRowInto(geocodeRoadFeature, _altnameTable, valueMapNewSchema);
-
-                                    consoleCounter = consoleCounter + 1;
-                                    Console.WriteLine(consoleCounter + ": not found in the other grid: " + geocodeRoadFeature.get_Value(geocodeRoadFeature.Fields.FindField("OBJECTID")).ToString());
-                                }
                             }
                             else
                             {
-                                
-                                //////// figure out what to do if the source road does not have a predir but then finds a matching seg with a predir in another quad 
-                                // save edits after the geocode table is done, before we start the altnames table
-                                
-                                ////consoleCounter = consoleCounter + 1;
-                                ////Console.WriteLine(consoleCounter + ": not found in the other grid: " + geocodeRoadFeature.get_Value(geocodeRoadFeature.Fields.FindField("OBJECTID")).ToString());
-                                ////// A matching feature was not found.
-                                ////// Add a record to the table without a predir.
-                                ////// Remove the PREDIR value from the field map
-                                ////var valueMapNewSchemaNoPredir = valueMapNewSchema;
-                                ////valueMapNewSchemaNoPredir.Remove("PREDIR");
-                                ////EsriHelper.InsertRowInto(geocodeRoadFeature, _altnameTable, valueMapNewSchema);
+                                // No possible candidates were found in other quad, so add this segment to the AltNames table
+                            }
+
+                            // Write to the AltNames table > match was not found
+                            if (foundMatch == false)
+                            {
+                                // A matching feature was not found.
+                                // Add a record to the table without a predir.
+                                // Remove the PREDIR value from the field map
+                                var valueMapNewSchemaNoPredir = valueMapNewSchema;
+                                valueMapNewSchemaNoPredir.Remove("PREDIR");
+                                EsriHelper.InsertRowInto(geocodeRoadFeature, _altnameTable, valueMapNewSchema);
+
+                                consoleCounter = consoleCounter + 1;
+                                Console.WriteLine(consoleCounter + ": not found in the other grid: " + geocodeRoadFeature.get_Value(geocodeRoadFeature.Fields.FindField("OBJECTID")).ToString());
                             }
                         }
-
                     }
                     // stop editing from altnames table
                     outputEditWorkspace.StopEditOperation();
