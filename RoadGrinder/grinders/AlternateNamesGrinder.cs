@@ -37,7 +37,7 @@ namespace RoadGrinder.grinders
                 // create a feature cursor from the source roads data and loop through this subset
                 // create the query filter to filter results
                 // FOR TESTING...
-                const string geocodableRoads = @"ADDR_SYS = 'SALT LAKE CITY' and CARTOCODE not in ('1','7','99') and 
+                const string geocodableRoads = @"ADDR_SYS <> 'SALT LAKE CITY' and CARTOCODE not in ('1','7','99') and 
                                                     ((L_F_ADD <> 0 and L_T_ADD <> 0) OR (R_F_ADD <> 0 and R_T_ADD <> 0)) and 
                                                     STREETNAME <> '' and STREETNAME not like '%ROUNDABOUT%'";
 
@@ -165,18 +165,6 @@ namespace RoadGrinder.grinders
                             // set up query filter 
                             var possibleCandidatesFilter = new QueryFilter
                             {
-//                                WhereClause = @"(ADDRSYS_L = '" + geocodeRoadFeature.get_Value(geocodeRoadFeature.Fields.FindField(("ADDRSYS_L"))).ToString() + @"' AND 
-//                                                ADDRSYS_R = '" + geocodeRoadFeature.get_Value(geocodeRoadFeature.Fields.FindField(("ADDRSYS_R"))).ToString() + @"' AND 
-//                                                NAME = '" + geocodeRoadFeature.get_Value(geocodeRoadFeature.Fields.FindField(("NAME"))).ToString() + @"' AND 
-//                                                POSTTYPE = '" + geocodeRoadFeature.get_Value(geocodeRoadFeature.Fields.FindField(("POSTTYPE"))).ToString() + @"' AND 
-//                                                POSTDIR = '" + geocodeRoadFeature.get_Value(geocodeRoadFeature.Fields.FindField(("POSTDIR"))).ToString() + @"' AND 
-//                                                PREDIR <> '" + geocodeRoadFeature.get_Value(geocodeRoadFeature.Fields.FindField(("PREDIR"))).ToString() + @"') AND 
-//                                                (((FROMADDR_L BETWEEN " + geocodeRoadFeature.get_Value(geocodeRoadFeature.Fields.FindField(("FROMADDR_L"))) + @" AND " + geocodeRoadFeature.get_Value(geocodeRoadFeature.Fields.FindField(("TOADDR_L"))) + @") OR 
-//                                                (TOADDR_L BETWEEN " + geocodeRoadFeature.get_Value(geocodeRoadFeature.Fields.FindField(("FROMADDR_L"))) + @" AND " + geocodeRoadFeature.get_Value(geocodeRoadFeature.Fields.FindField(("TOADDR_L"))) + @")) OR
-//                                                ((FROMADDR_R BETWEEN " + geocodeRoadFeature.get_Value(geocodeRoadFeature.Fields.FindField(("FROMADDR_R"))) + @" AND " + geocodeRoadFeature.get_Value(geocodeRoadFeature.Fields.FindField(("TOADDR_R"))) + @") OR 
-//                                                (TOADDR_R BETWEEN " + geocodeRoadFeature.get_Value(geocodeRoadFeature.Fields.FindField(("FROMADDR_R"))) + @" AND " + geocodeRoadFeature.get_Value(geocodeRoadFeature.Fields.FindField(("TOADDR_R"))) + @")))"
-//                            };
-
                                 WhereClause = @"(ADDRSYS_L = '" + geocodeRoadFeature.get_Value(geocodeRoadFeature.Fields.FindField(("ADDRSYS_L"))).ToString() + @"' AND 
                                                 ADDRSYS_R = '" + geocodeRoadFeature.get_Value(geocodeRoadFeature.Fields.FindField(("ADDRSYS_R"))).ToString() + @"' AND 
                                                 NAME = '" + geocodeRoadFeature.get_Value(geocodeRoadFeature.Fields.FindField(("NAME"))).ToString() + @"' AND 
@@ -391,7 +379,7 @@ namespace RoadGrinder.grinders
         public IWorkspace CreateOutput()
         {
             // create the file geodatabase for the derived geocoding data
-            var output = EsriHelper.CreateFileGdbWorkspace(_options.OutputGeodatabase, GeocodeRoadsFeatureClassName);
+            var output = EsriHelper.CreateFileGdbWorkspace(_options.OutputGeodatabase, "RoadGrinder");
             // releaser.ManageLifetime(output);
 
             var outputFeatureWorkspace = (IFeatureWorkspace)output;
