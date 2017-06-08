@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using ESRI.ArcGIS.ADF;
 using ESRI.ArcGIS.Geodatabase;
 using RoadGrinder.commands;
@@ -94,6 +95,13 @@ namespace RoadGrinder.grinders
                             aliasValueMap["STREETNAME"] = aliasValueMap["ALIAS1"];
                             aliasValueMap["STREETTYPE"] = aliasValueMap["ALIAS1TYPE"];
 
+                            // check if primary name is acs, if so remove the sufdir for new alias1-based feature
+                            if (!aliasValueMap["STREETNAME"].ToString().Any(char.IsLetter))
+                            {
+                                // acs primary street
+                                aliasValueMap.Remove("SUFDIR");
+                            }
+
                             //RemoveKeys(aliasValueMap);
 
                             // create a new feature
@@ -104,7 +112,15 @@ namespace RoadGrinder.grinders
                         {
                             var aliasValueMap = valueMap;
                             aliasValueMap["STREETNAME"] = aliasValueMap["ALIAS2"];
-                            aliasValueMap["STREETTYPE"] = aliasValueMap["ALIAS2TYPE"];
+                            aliasValueMap["STREETTYPE"] = aliasValueMap["ALIAS2TYPE"];                            
+                            
+                            // check if primary name is acs, if so remove the sufdir for new alias2-based feature
+                            // check if primary name is acs, if so remove the sufdir for new alias1-based feature
+                            if (!aliasValueMap["STREETNAME"].ToString().Any(char.IsLetter))
+                            {
+                                // acs primary street
+                                aliasValueMap.Remove("SUFDIR");
+                            }
 
                             //RemoveKeys(aliasValueMap);
 
