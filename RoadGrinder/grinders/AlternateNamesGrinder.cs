@@ -145,7 +145,7 @@ namespace RoadGrinder.grinders
                     outputEditWorkspace.StopEditing(true);
                 }
 
-                // create the altnames table
+                // load records into the altnames table for roads
                 Console.WriteLine("begin altnames table: " + DateTime.Now);
                 // get feature cursor of newly-created derived-roads fgdb feature class
                 using (var comReleaser = new ComReleaser())
@@ -375,6 +375,10 @@ namespace RoadGrinder.grinders
                     outputEditWorkspace.StopEditOperation();
                     outputEditWorkspace.StopEditing(true);
                 }
+
+                // load records into the altnames table for address points
+
+
 
                 Console.WriteLine("Started at: " + startTime);
                 Console.WriteLine("Finished at: " + DateTime.Now);
