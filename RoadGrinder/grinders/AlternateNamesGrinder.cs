@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data.SqlClient;
 using System.Linq;
+using Dapper;
 using ESRI.ArcGIS.ADF;
 using ESRI.ArcGIS.Geodatabase;
 using RoadGrinder.commands;
@@ -17,7 +19,8 @@ namespace RoadGrinder.grinders
         private readonly CliOptions _options;
         private readonly IFeatureClass _roads;
         private IFeatureClass _geocodeRoads;
-        private ITable _altnameTable;
+        private ITable _altnameTableRoads;
+        private ITable _altnameTableAddrPnts;
 
         public AlternateNamesGrinder(IFeatureClass source, CliOptions options)
         {
@@ -145,8 +148,9 @@ namespace RoadGrinder.grinders
                     outputEditWorkspace.StopEditing(true);
                 }
 
+                #region make this a seperate command (LoadAltNamesRoads), passing in the table name and workspace
                 // load records into the altnames table for roads
-                Console.WriteLine("begin altnames table: " + DateTime.Now);
+                Console.WriteLine("begin altnames table for roads: " + DateTime.Now);
                 // get feature cursor of newly-created derived-roads fgdb feature class
                 using (var comReleaser = new ComReleaser())
                 {
@@ -364,20 +368,66 @@ namespace RoadGrinder.grinders
                                 // Remove the PREDIR value from the field map
                                 var valueMapNewSchemaNoPredir = valueMapNewSchema;
                                 valueMapNewSchemaNoPredir.Remove("PREDIR");
-                                EsriHelper.InsertRowInto(geocodeRoadFeature, _altnameTable, valueMapNewSchema);
+                                EsriHelper.InsertRowInto(geocodeRoadFeature, _altnameTableRoads, valueMapNewSchema);
 
                                 consoleCounter = consoleCounter + 1;
                                 Console.WriteLine(consoleCounter + ": not found in the other grid: " + geocodeRoadFeature.get_Value(geocodeRoadFeature.Fields.FindField("OBJECTID")).ToString());
                             }
                         }
                     }
-                    // stop editing from altnames table
+                    // stop editing from altnames road table (this allow the roads altnames table to be preserved even if the altnames for addr pnts (below) errors out)
                     outputEditWorkspace.StopEditOperation();
                     outputEditWorkspace.StopEditing(true);
                 }
+                #endregion
 
+                #region make this a seperate command (LoadAltNamesAddrPnts), passing in the table name and workspace
                 // load records into the altnames table for address points
+                //start editing again
+                //outputEditWorkspace.StartEditing(false);
+                //outputEditWorkspace.StartEditOperation();
 
+                Console.WriteLine("begin altnames table for addr pnts: " + DateTime.Now);
+                var connectionStringSgid = @"Data Source=" + _options.SgidServer + @";Initial Catalog=" + _options.SgidDatabase + @";User ID=" + _options.SgidId + @";Password=" + _options.SgidId + @"";
+                
+                const string getSgidAddrPntsQuery = @"SELECT * FROM LOCATION.ADDRESSPOINTS WHERE PrefixDir <> '' AND StreetName LIKE '%[A-Z]%';";
+                using (var con = new SqlConnection(connectionStringSgid))
+                {
+                    con.Open();
+                    var getSgidAddrPntsList = con.Query(getSgidAddrPntsQuery);
+
+                    // loop through potential altname address points (from sgid records) 
+                    var sgidAddrPntsList = getSgidAddrPntsList as dynamic[] ?? getSgidAddrPntsList.ToArray();
+                    foreach (var sgidAddrPnt in sgidAddrPntsList)
+                    {
+                        // check for matching address point in same address-system with different prefix
+                        const string checkForMatchingAddrPntQuery = @"SELECT * FROM LOCATION.ADDRESSPOINTS WHERE AddSystem = 'HEBER CITY' AND AddNum = '88' AND PrefixDir <> 'W' AND StreetName = 'CLOVER' AND StreetType = 'CIR' AND SuffixDir = '';";
+                        using (var con1 = new SqlConnection(connectionStringSgid))
+                        {
+                            con1.Open();
+                            var checkForMatchingAddrPntList = con1.Query(checkForMatchingAddrPntQuery);
+
+                            // check if match was found
+                            var sgidMatches = checkForMatchingAddrPntList as dynamic[] ?? checkForMatchingAddrPntList.ToArray();
+                            if (sgidMatches.Count() != 0)
+                            {
+                                // a match was found
+                                foreach (var sgidMatch in sgidMatches)
+                                {
+                                }
+                            }
+                            else
+                            {
+                                // a match was not found, add the address to the altnames addrpnts table
+
+                            }
+                        }
+                    }
+                }
+                // stop editing from altnames addr pnts table
+                //outputEditWorkspace.StopEditOperation();
+                //outputEditWorkspace.StopEditing(true);
+                #endregion
 
 
                 Console.WriteLine("Started at: " + startTime);
@@ -430,10 +480,10 @@ namespace RoadGrinder.grinders
             _geocodeRoads = EsriHelper.CreateFeatureClass(GeocodeRoadsFeatureClassName, null, outputFeatureWorkspace);
 
             // create a roads altnames table in the newly-created file geodatabase
-            _altnameTable = EsriHelper.CreateTable(GeocodeRoadsTableName + "Roads", null, outputFeatureWorkspace);
+            _altnameTableRoads = EsriHelper.CreateTable(GeocodeRoadsTableName + "Roads", null, outputFeatureWorkspace);
 
             // create a address points altnames table in the newly-created file geodatabase
-            _altnameTable = EsriHelper.CreateTable(GeocodeRoadsTableName + "AddrPnts", null, outputFeatureWorkspace);
+            _altnameTableAddrPnts = EsriHelper.CreateTable(GeocodeRoadsTableName + "AddrPnts", null, outputFeatureWorkspace);
 
             return output;
         }

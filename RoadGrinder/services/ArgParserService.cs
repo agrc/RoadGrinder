@@ -28,6 +28,18 @@ namespace RoadGrinder.services
                     v => options.OutputGeodatabase = v
                 },
                 {
+                    "ss|sgidserver=", "REQUIRED. the name of the server containing the database with the address points. eg: c:\\sgid.sde",
+                    v => options.SgidServer = v
+                },
+                {
+                    "sd|sgiddatabase=", "REQUIRED. the name of the server containing the database with the address points. eg: c:\\sgid.sde",
+                    v => options.SgidDatabase = v
+                },
+                {
+                    "si|sgidID=", "REQUIRED. the name of the server containing the database with the address points. eg: c:\\sgid.sde",
+                    v => options.SgidId = v
+                },
+                {
                     "v", "increase the debug message verbosity.",
                     v =>
                     {
@@ -67,6 +79,24 @@ namespace RoadGrinder.services
             {
                 throw new InvalidOperationException(
                     "Missing required option -c for the location of the sde connection file.");
+            }
+
+            if (string.IsNullOrEmpty(options.SgidDatabase))
+            {
+                throw new InvalidOperationException(
+                    "Missing required option -sd for the name of the sgid database.");
+            }
+
+            if (string.IsNullOrEmpty(options.SgidId))
+            {
+                throw new InvalidOperationException(
+                    "Missing required option -si for the name of the sgid conn user/pass.");
+            }
+
+            if (string.IsNullOrEmpty(options.SgidServer))
+            {
+                throw new InvalidOperationException(
+                    "Missing required option -ss for the name of the sgid server.");
             }
 
             if (!new FileInfo(options.SdeConnectionPath).Exists)
