@@ -425,8 +425,11 @@ namespace RoadGrinder.grinders
             // create a feature class in the newly-created file geodatabase
             _geocodeRoads = EsriHelper.CreateFeatureClass(GeocodeRoadsFeatureClassName, null, outputFeatureWorkspace);
 
-            // create a table in the newly-created file geodatabase
-            _altnameTable = EsriHelper.CreateTable(GeocodeRoadsTableName, null, outputFeatureWorkspace);
+            // create a roads altnames table in the newly-created file geodatabase
+            _altnameTable = EsriHelper.CreateTable(GeocodeRoadsTableName + "Roads", null, outputFeatureWorkspace);
+
+            // create a address points altnames table in the newly-created file geodatabase
+            _altnameTable = EsriHelper.CreateTable(GeocodeRoadsTableName + "AddrPnts", null, outputFeatureWorkspace);
 
             return output;
         }

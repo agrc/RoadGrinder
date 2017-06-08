@@ -96,6 +96,8 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="commands\AddValueToIndexFieldMapCommand.cs" />
+    <Compile Include="commands\CreateFieldsCollectionAddrPntsCommand.cs" />
+    <Compile Include="commands\CreateFieldsCollectionRoadsCommand.cs" />
     <Compile Include="commands\FindIndexByNameCommand.cs" />
     <Compile Include="contracts\IGrindable.cs" />
     <Compile Include="grinders\AlternateNamesGrinder.cs" />
