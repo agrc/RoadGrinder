@@ -484,7 +484,7 @@ namespace RoadGrinder.services
         }
         #endregion
 
-        #region "Insert row into table"
+        #region "Overloaded Method - Insert row into table, built from arcgis feature"
         public static void InsertRowInto(IFeature feature, ITable table, Dictionary<string, IndexFieldValue> fieldValues)
         {
             try
@@ -507,6 +507,31 @@ namespace RoadGrinder.services
             }
         }
         #endregion
+
+        #region "Overloaded Method - Insert row into table, built from sqldatareader"
+        public static void InsertRowInto(ITable table, Dictionary<string, string> fieldValues)
+        {
+            try
+            {
+                var newRow = table.CreateRow();
+
+                foreach (var fieldValue in fieldValues)
+                {
+                    newRow.set_Value(newRow.Fields.FindField(fieldValue.Key), fieldValue.Value);
+                }
+
+                newRow.Store();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(
+                    "There was an error with InsertRowInto method." +
+                    ex.Message + " " + ex.Source + " " + ex.InnerException + " " + ex.HResult + " " + ex.StackTrace + " " + ex);
+                Console.ReadLine();
+            }
+        }
+        #endregion
+
 
     }
 }

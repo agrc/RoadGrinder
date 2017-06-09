@@ -41,7 +41,7 @@ namespace RoadGrinder.grinders
                 // create a feature cursor from the source roads data and loop through this subset
                 // create the query filter to filter results
                 // FOR TESTING...
-                const string geocodableRoads = @"ADDR_SYS <> 'SALT LAKE CITY' and CARTOCODE not in ('1','7','99') and 
+                const string geocodableRoads = @"ADDR_SYS = 'ST GEORGE'  AND STREETNAME = 'TABERNACLE' and CARTOCODE not in ('1','7','99') and 
                                                     ((L_F_ADD <> 0 and L_T_ADD <> 0) OR (R_F_ADD <> 0 and R_T_ADD <> 0)) and 
                                                     STREETNAME <> '' and STREETNAME not like '%ROUNDABOUT%'";
 
@@ -384,49 +384,59 @@ namespace RoadGrinder.grinders
                 #region make this a seperate command (LoadAltNamesAddrPnts), passing in the table name and workspace
                 // load records into the altnames table for address points
                 //start editing again
-                //outputEditWorkspace.StartEditing(false);
-                //outputEditWorkspace.StartEditOperation();
+                outputEditWorkspace.StartEditing(false);
+                outputEditWorkspace.StartEditOperation();
 
                 Console.WriteLine("begin altnames table for addr pnts: " + DateTime.Now);
                 var connectionStringSgid = @"Data Source=" + _options.SgidServer + @";Initial Catalog=" + _options.SgidDatabase + @";User ID=" + _options.SgidId + @";Password=" + _options.SgidId + @"";
-                
-                const string getSgidAddrPntsQuery = @"SELECT * FROM LOCATION.ADDRESSPOINTS WHERE PrefixDir <> '' AND StreetName LIKE '%[A-Z]%';";
+
+                const string sgidAddrPntstoVerifyQuery = @"SELECT TOP(10) * FROM LOCATION.ADDRESSPOINTS WHERE PrefixDir <> '' AND StreetName LIKE '%[A-Z]%';";
                 using (var con = new SqlConnection(connectionStringSgid))
                 {
                     con.Open();
-                    var getSgidAddrPntsList = con.Query(getSgidAddrPntsQuery);
+                    var sgidAddrPntsToVerifyList = con.Query(sgidAddrPntstoVerifyQuery);
 
                     // loop through potential altname address points (from sgid records) 
-                    var sgidAddrPntsList = getSgidAddrPntsList as dynamic[] ?? getSgidAddrPntsList.ToArray();
-                    foreach (var sgidAddrPnt in sgidAddrPntsList)
+                    var sgidAddrPntsList = sgidAddrPntsToVerifyList as dynamic[] ?? sgidAddrPntsToVerifyList.ToArray();
+                    foreach (var sgidAddrPntToVerify in sgidAddrPntsList)
                     {
                         // check for matching address point in same address-system with different prefix
-                        const string checkForMatchingAddrPntQuery = @"SELECT * FROM LOCATION.ADDRESSPOINTS WHERE AddSystem = 'HEBER CITY' AND AddNum = '88' AND PrefixDir <> 'W' AND StreetName = 'CLOVER' AND StreetType = 'CIR' AND SuffixDir = '';";
+                        string matchingAddrPntQuery = @"SELECT * FROM LOCATION.ADDRESSPOINTS WHERE AddSystem = '" + sgidAddrPntToVerify.AddSystem + @"' AND AddNum = '" + sgidAddrPntToVerify.AddNum + @"' AND PrefixDir <> '" + sgidAddrPntToVerify.PrefixDir + @"' AND StreetName = '" + sgidAddrPntToVerify.StreetName + @"' AND StreetType = '" + sgidAddrPntToVerify.StreetType + @"' AND SuffixDir = '" + sgidAddrPntToVerify.SuffixDir + @"';";
                         using (var con1 = new SqlConnection(connectionStringSgid))
                         {
                             con1.Open();
-                            var checkForMatchingAddrPntList = con1.Query(checkForMatchingAddrPntQuery);
+                            var matchingAddrPntList = con1.Query(matchingAddrPntQuery);
 
                             // check if match was found
-                            var sgidMatches = checkForMatchingAddrPntList as dynamic[] ?? checkForMatchingAddrPntList.ToArray();
-                            if (sgidMatches.Count() != 0)
+                            var matches = matchingAddrPntList as dynamic[] ?? matchingAddrPntList.ToArray();
+                            if (matches.Count() != 0)
                             {
                                 // a match was found
-                                foreach (var sgidMatch in sgidMatches)
+                                foreach (var match in matches)
                                 {
                                 }
                             }
                             else
                             {
+                                // Create a dictionary of the field values to load in the altnames addrpnts table.
+                                var altNameAddrPntDictionary = new Dictionary<string, string>();
+                                for (int i = 0; i < sgidAddrPntToVerify.Keys.Count; i++)
+                                {
+                                    altNameAddrPntDictionary.Add(sgidAddrPntToVerify.Key[i],sgidAddrPntToVerify.Value[i]);
+                                    //altNameAddrPntDictionary[sgidAddrPntToVerify[i]] = i;
+                                }
+                                // Remove the prefix dir.
+                                altNameAddrPntDictionary.Remove("PrefixDir");
+                                
                                 // a match was not found, add the address to the altnames addrpnts table
-
+                                EsriHelper.InsertRowInto(_altnameTableAddrPnts, altNameAddrPntDictionary);
                             }
                         }
                     }
                 }
                 // stop editing from altnames addr pnts table
-                //outputEditWorkspace.StopEditOperation();
-                //outputEditWorkspace.StopEditing(true);
+                outputEditWorkspace.StopEditOperation();
+                outputEditWorkspace.StopEditing(true);
                 #endregion
 
 
@@ -466,14 +476,24 @@ namespace RoadGrinder.grinders
                 outputDataset.Rename(string.Format("{0}{1}{2:yyyyMMdd}", GeocodeRoadsFeatureClassName, "ReplacedOn", DateTime.Now));
             }
 
-            if (EsriHelper.NameExists(outputWorkspace2, GeocodeRoadsTableName, esriDatasetType.esriDTTable))
+            if (EsriHelper.NameExists(outputWorkspace2, GeocodeRoadsTableName + "Roads", esriDatasetType.esriDTTable))
             {
                 // rename existing table
-                var renameTable = outputFeatureWorkspace.OpenTable(GeocodeRoadsTableName);
+                var renameTable = outputFeatureWorkspace.OpenTable(GeocodeRoadsTableName + "Roads");
                 // releaser.ManageLifetime(renameTable);
 
                 var outputDataset = (IDataset)renameTable;
-                outputDataset.Rename(string.Format("{0}{1}{2}", GeocodeRoadsTableName, "ReplacedOn", DateTime.Now.ToString("yyyyMMdd")));
+                outputDataset.Rename(string.Format("{0}{1}{2}", GeocodeRoadsTableName + "Roads", "ReplacedOn", DateTime.Now.ToString("yyyyMMdd")));
+            }
+
+            if (EsriHelper.NameExists(outputWorkspace2, GeocodeRoadsTableName + "AddrPnts", esriDatasetType.esriDTTable))
+            {
+                // rename existing table
+                var renameTable = outputFeatureWorkspace.OpenTable(GeocodeRoadsTableName + "AddrPnts");
+                // releaser.ManageLifetime(renameTable);
+
+                var outputDataset = (IDataset)renameTable;
+                outputDataset.Rename(string.Format("{0}{1}{2}", GeocodeRoadsTableName + "AddrPnts", "ReplacedOn", DateTime.Now.ToString("yyyyMMdd")));
             }
 
             // create a feature class in the newly-created file geodatabase
