@@ -509,7 +509,7 @@ namespace RoadGrinder.services
         #endregion
 
         #region "Overloaded Method - Insert row into table, built from sqldatareader"
-        public static void InsertRowInto(ITable table, Dictionary<string, string> fieldValues)
+        public static void InsertRowInto(ITable table, IDictionary<string, object> fieldValues)
         {
             try
             {

@@ -390,7 +390,7 @@ namespace RoadGrinder.grinders
                 Console.WriteLine("begin altnames table for addr pnts: " + DateTime.Now);
                 var connectionStringSgid = @"Data Source=" + _options.SgidServer + @";Initial Catalog=" + _options.SgidDatabase + @";User ID=" + _options.SgidId + @";Password=" + _options.SgidId + @"";
 
-                const string sgidAddrPntstoVerifyQuery = @"SELECT TOP(10) * FROM LOCATION.ADDRESSPOINTS WHERE PrefixDir <> '' AND StreetName LIKE '%[A-Z]%';";
+                const string sgidAddrPntstoVerifyQuery = @"SELECT TOP(10) AddSystem,UTAddPtID,AddNum,PrefixDir,StreetName,StreetType,SuffixDir,UnitType, UnitID, City, ZipCode, CountyID FROM LOCATION.ADDRESSPOINTS WHERE PrefixDir <> '' AND StreetName LIKE '%[A-Z]%';";
                 using (var con = new SqlConnection(connectionStringSgid))
                 {
                     con.Open();
@@ -405,32 +405,48 @@ namespace RoadGrinder.grinders
                         using (var con1 = new SqlConnection(connectionStringSgid))
                         {
                             con1.Open();
-                            var matchingAddrPntList = con1.Query(matchingAddrPntQuery);
+                            //var matchingAddrPntList = con1.Query(matchingAddrPntQuery);
 
-                            // check if match was found
-                            var matches = matchingAddrPntList as dynamic[] ?? matchingAddrPntList.ToArray();
-                            if (matches.Count() != 0)
+                            var dict = con1.Query(matchingAddrPntQuery).ToDictionary(
+                                row => (string)row.UniqueString,
+                                row => (string)row.Id);
+
+
+                            if (dict.Count == 0)
                             {
-                                // a match was found
-                                foreach (var match in matches)
-                                {
-                                }
+                                IDictionary<string, object> dictRow =
+                                    sgidAddrPntToVerify as IDictionary<string, object>;
+                                //dictRow.Remove("OBJECTID");
+                                dictRow.Remove("PrefixDir");
+                                EsriHelper.InsertRowInto(_altnameTableAddrPnts, dictRow);
                             }
-                            else
-                            {
-                                // Create a dictionary of the field values to load in the altnames addrpnts table.
-                                var altNameAddrPntDictionary = new Dictionary<string, string>();
-                                for (int i = 0; i < sgidAddrPntToVerify.Keys.Count; i++)
-                                {
-                                    altNameAddrPntDictionary.Add(sgidAddrPntToVerify.Key[i],sgidAddrPntToVerify.Value[i]);
-                                    //altNameAddrPntDictionary[sgidAddrPntToVerify[i]] = i;
-                                }
-                                // Remove the prefix dir.
-                                altNameAddrPntDictionary.Remove("PrefixDir");
-                                
-                                // a match was not found, add the address to the altnames addrpnts table
-                                EsriHelper.InsertRowInto(_altnameTableAddrPnts, altNameAddrPntDictionary);
-                            }
+
+                            //// check if match was found
+                            //var matches = matchingAddrPntList as dynamic[] ?? matchingAddrPntList.ToArray();
+                            //if (matches.Count() != 0)
+                            //{
+                            //    // a match was found
+                            //    foreach (var match in matches)
+                            //    {
+                            //    }
+                            //}
+                            //else
+                            //{
+                            //    // Create a dictionary of the field values to load in the altnames addrpnts table.
+                            //    //var altNameAddrPntDictionary = new Dictionary<string, string>();
+                            //    //for (int i = 0; i < sgidAddrPntToVerify.Keys.Count; i++)
+                            //    //{
+                            //    //    altNameAddrPntDictionary.Add(sgidAddrPntToVerify.Key[i],sgidAddrPntToVerify.Value[i]);
+                            //    //    //altNameAddrPntDictionary[sgidAddrPntToVerify[i]] = i;
+                            //    //}
+                            //    //// Remove the prefix dir.
+                            //    //altNameAddrPntDictionary.Remove("PrefixDir");
+
+                            //    var altNameAddrPntDictionary = new Dictionary<string, string>();
+                            //    altNameAddrPntDictionary = (Dictionary<string,string>)sgidAddrPntToVerify;
+                            //    // a match was not found, add the address to the altnames addrpnts table
+                            //    EsriHelper.InsertRowInto(_altnameTableAddrPnts, altNameAddrPntDictionary);
+                            //}
                         }
                     }
                 }
