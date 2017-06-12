@@ -33,6 +33,14 @@ namespace RoadGrinder.commands
             addNumFieldEdit.Length_2 = 10;
             fieldsEdit.AddField(addNumField);
 
+            // Create a text field called "AddNumSuffix" for the fields collection.
+            IField addNumSuffixField = new FieldClass();
+            var addNumSuffixFieldEdit = (IFieldEdit)addNumSuffixField;
+            addNumSuffixFieldEdit.Name_2 = "AddNumSuffix";
+            addNumSuffixFieldEdit.Type_2 = esriFieldType.esriFieldTypeString;
+            addNumSuffixFieldEdit.Length_2 = 4;
+            fieldsEdit.AddField(addNumSuffixField);
+
             // Create a text field called "PrefixDir" for the fields collection.
             IField predirField = new FieldClass();
             var predirFieldEdit = (IFieldEdit) predirField;
