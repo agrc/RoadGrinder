@@ -98,6 +98,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="commands\AddIndexToFieldCommand.cs" />
     <Compile Include="commands\AddValueToIndexFieldMapCommand.cs" />
     <Compile Include="commands\CreateFieldsCollectionAddrPntsCommand.cs" />
     <Compile Include="commands\CreateFieldsCollectionRoadsCommand.cs" />

@@ -148,6 +148,15 @@ namespace RoadGrinder.grinders
                     outputEditWorkspace.StopEditing(true);
                 }
 
+                // Add Indexes to query fields.
+                string[] fieldsToIndex = { "ADDRSYS_L", "ADDRSYS_R", "FROMADDR_L", "TOADDR_L", "FROMADDR_R", "TOADDR_R",
+                    "PREDIR", "NAME", "POSTTYPE", "POSTDIR"};
+                foreach (var field in fieldsToIndex)
+                {
+                    AddIndexToFieldCommand.Execute(_geocodeRoads, field + "_IDX", field);                    
+                }
+
+
                 #region make this a seperate command (LoadAltNamesRoads), passing in the table name and workspace
                 // load records into the altnames table for roads
                 Console.WriteLine("begin altnames table for roads: " + DateTime.Now);
