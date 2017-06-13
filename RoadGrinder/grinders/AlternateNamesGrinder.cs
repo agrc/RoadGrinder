@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data.SqlClient;
+using System.Diagnostics;
 using System.Linq;
 using Dapper;
 using ESRI.ArcGIS.ADF;
@@ -396,10 +397,13 @@ namespace RoadGrinder.grinders
                 outputEditWorkspace.StartEditing(false);
                 outputEditWorkspace.StartEditOperation();
 
+                int counter = 0;
+
                 Console.WriteLine("begin altnames table for addr pnts: " + DateTime.Now);
                 var connectionStringSgid = @"Data Source=" + _options.SgidServer + @";Initial Catalog=" + _options.SgidDatabase + @";User ID=" + _options.SgidId + @";Password=" + _options.SgidId + @"";
 
-                const string sgidAddrPntstoVerifyQuery = @"SELECT TOP(300) AddSystem,UTAddPtID,AddNum,AddNumSuffix,PrefixDir,StreetName,StreetType,SuffixDir,UnitType, UnitID, City, ZipCode, CountyID FROM LOCATION.ADDRESSPOINTS WHERE PrefixDir <> '' AND StreetName LIKE '%[A-Z]%';";
+                //const string sgidAddrPntstoVerifyQuery = @"SELECT DISTINCT AddSystem,UTAddPtID,AddNum,AddNumSuffix,PrefixDir,StreetName,StreetType,SuffixDir,UnitType, UnitID, City, ZipCode, CountyID FROM LOCATION.ADDRESSPOINTS WHERE PrefixDir <> '' AND StreetName LIKE '%[A-Z]%' AND StreetName NOT LIKE 'HIGHWAY %' and AddSystem = 'SALT LAKE CITY' AND StreetName = 'STATE';";
+                const string sgidAddrPntstoVerifyQuery = @"SELECT DISTINCT AddSystem,AddNum,PrefixDir,StreetName,StreetType,SuffixDir,City,ZipCode,CountyID FROM LOCATION.ADDRESSPOINTS WHERE PrefixDir <> '' AND StreetName LIKE '%[A-Z]%' AND StreetName NOT LIKE 'HIGHWAY %' and AddSystem = 'SALT LAKE CITY' AND StreetName = 'STATE' and AddNum = '125';";
                 using (var con = new SqlConnection(connectionStringSgid))
                 {
                     con.Open();
@@ -410,26 +414,75 @@ namespace RoadGrinder.grinders
                     foreach (var sgidAddrPntToVerify in sgidAddrPntsList)
                     {
                         // check for matching address point in same address-system with different prefix
-                        string matchingAddrPntQuery = @"SELECT * FROM LOCATION.ADDRESSPOINTS WHERE AddSystem = '" + sgidAddrPntToVerify.AddSystem + @"' AND AddNum = '" + sgidAddrPntToVerify.AddNum + @"' AND PrefixDir <> '" + sgidAddrPntToVerify.PrefixDir + @"' AND StreetName = '" + sgidAddrPntToVerify.StreetName + @"' AND StreetType = '" + sgidAddrPntToVerify.StreetType + @"' AND SuffixDir = '" + sgidAddrPntToVerify.SuffixDir + @"' AND AddNumSuffix = '" + sgidAddrPntToVerify.AddNumSuffix + @"';";
+                        // Check is the SuffixDir is empty or null before creating the query
+                        //string matchingAddrPntQuery = @"SELECT OBJECTID FROM LOCATION.ADDRESSPOINTS WHERE AddSystem = '" + sgidAddrPntToVerify.AddSystem + @"' AND AddNum = '" + sgidAddrPntToVerify.AddNum + @"' AND PrefixDir <> '" + sgidAddrPntToVerify.PrefixDir + @"' AND StreetName = '" + sgidAddrPntToVerify.StreetName + @"' AND StreetType = '" + sgidAddrPntToVerify.StreetType + @"' AND IsNull(SuffixDir, '') = '';";
+                        string matchingAddrPntQuery = @"SELECT Count(*) Count FROM LOCATION.ADDRESSPOINTS WHERE AddSystem = '" + sgidAddrPntToVerify.AddSystem + @"' AND AddNum = '" + sgidAddrPntToVerify.AddNum + @"' AND PrefixDir <> '" + sgidAddrPntToVerify.PrefixDir + @"' AND StreetName = '" + sgidAddrPntToVerify.StreetName + @"' AND StreetType = '" + sgidAddrPntToVerify.StreetType + @"' AND SuffixDir = '" + sgidAddrPntToVerify.SuffixDir + @"'"; 
+                        //string matchingAddrPntQuery = @"SELECT * FROM LOCATION.ADDRESSPOINTS WHERE AddSystem = '" + sgidAddrPntToVerify.AddSystem + @"' AND AddNum = '" + sgidAddrPntToVerify.AddNum + @"' AND PrefixDir <> '" + sgidAddrPntToVerify.PrefixDir + @"' AND StreetName = '" + sgidAddrPntToVerify.StreetName + @"' AND StreetType = '" + sgidAddrPntToVerify.StreetType + @"' AND SuffixDir = '" + sgidAddrPntToVerify.SuffixDir + @"'";
+                        //if (sgidAddrPntToVerify.SuffixDir == null)
+                        //{
+                        //    matchingAddrPntQuery = @"SELECT OBJECTID FROM LOCATION.ADDRESSPOINTS WHERE AddSystem = '" + sgidAddrPntToVerify.AddSystem + @"' AND AddNum = '" + sgidAddrPntToVerify.AddNum + @"' AND PrefixDir <> '" + sgidAddrPntToVerify.PrefixDir + @"' AND StreetName = '" + sgidAddrPntToVerify.StreetName + @"' AND StreetType = '" + sgidAddrPntToVerify.StreetType + @"' AND SuffixDir is (string)null";                            
+                        //}
+                        //else
+                        //{
+                        //    matchingAddrPntQuery = @"SELECT OBJECTID FROM LOCATION.ADDRESSPOINTS WHERE AddSystem = '" + sgidAddrPntToVerify.AddSystem + @"' AND AddNum = '" + sgidAddrPntToVerify.AddNum + @"' AND PrefixDir <> '" + sgidAddrPntToVerify.PrefixDir + @"' AND StreetName = '" + sgidAddrPntToVerify.StreetName + @"' AND StreetType = '" + sgidAddrPntToVerify.StreetType + @"' AND SuffixDir = '" + sgidAddrPntToVerify.SuffixDir + @"'";         
+                        //}
+                        
+                        
                         using (var con1 = new SqlConnection(connectionStringSgid))
                         {
                             con1.Open();
-                            //var matchingAddrPntList = con1.Query(matchingAddrPntQuery);
+                            var rowCount = con1.ExecuteScalar<int>(matchingAddrPntQuery);
 
-                            var dict = con1.Query(matchingAddrPntQuery).ToDictionary(
-                                row => (string)row.UniqueString,
-                                row => (string)row.Id);
-
-
-                            if (dict.Count == 0)
+                            if (rowCount == 0)
                             {
+                                counter = counter + 1;
+                                Console.WriteLine(counter + ": AddressPoints: not found with other predir.");
                                 IDictionary<string, object> dictRow =
                                     sgidAddrPntToVerify as IDictionary<string, object>;
                                 //dictRow.Remove("OBJECTID");
                                 dictRow.Remove("PrefixDir");
-                                EsriHelper.InsertRowInto(_altnameTableAddrPnts, dictRow);
+                                EsriHelper.InsertRowInto(_altnameTableAddrPnts, dictRow);                                
+                            }
+                            else
+                            {
+                                Console.WriteLine(counter + ": AddressPoints: found with other predir - don't add to altnames table.");
                             }
 
+                            //var matchingAddrPntList = con1.Query(matchingAddrPntQuery);
+                            //var matchCount = matchingAddrPntList as dynamic[] ?? matchingAddrPntList.ToArray();
+                            //foreach (var match in matchCount)
+                            //{
+                            //    if (match.Count == 0)
+                            //    {
+
+                            //    }
+                            //    else
+                            //    {
+                            //        Console.WriteLine(counter + ": AddressPoints: found with other predir - don't add to altnames table.");
+                            //    }                                
+                            //}
+
+
+
+                            ////var dict = con1.Query(matchingAddrPntQuery).ToDictionary(
+                            ////    row => (string)row.UniqueString,
+                            ////    row => (string)row.Id);
+
+                            //if (dict.Count == 0)
+                            //{
+                            //    counter = counter + 1;
+                            //    Console.WriteLine(counter + ": AddressPoints: not found with other predir.");
+                            //    IDictionary<string, object> dictRow =
+                            //        sgidAddrPntToVerify as IDictionary<string, object>;
+                            //    //dictRow.Remove("OBJECTID");
+                            //    dictRow.Remove("PrefixDir");
+                            //    EsriHelper.InsertRowInto(_altnameTableAddrPnts, dictRow);
+                            //}
+                            //else
+                            //{
+                            //    counter = counter + 1;
+                            //    Console.WriteLine(counter + ": AddressPoints: found with other predir - don't add to altnames table.");
+                            //}
                         }
                     }
                 }
@@ -437,7 +490,6 @@ namespace RoadGrinder.grinders
                 outputEditWorkspace.StopEditOperation();
                 outputEditWorkspace.StopEditing(true);
                 #endregion
-
 
                 Console.WriteLine("Started at: " + startTime);
                 Console.WriteLine("Finished at: " + DateTime.Now);
