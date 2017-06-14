@@ -100,9 +100,11 @@
   <ItemGroup>
     <Compile Include="commands\AddIndexToFieldCommand.cs" />
     <Compile Include="commands\AddValueToIndexFieldMapCommand.cs" />
+    <Compile Include="commands\PopulateAltNamesRoadsTableCommand.cs" />
     <Compile Include="commands\CreateFieldsCollectionAddrPntsCommand.cs" />
     <Compile Include="commands\CreateFieldsCollectionRoadsCommand.cs" />
     <Compile Include="commands\FindIndexByNameCommand.cs" />
+    <Compile Include="commands\PopulateAltNamesAddrPntsTableCommand.cs" />
     <Compile Include="contracts\IGrindable.cs" />
     <Compile Include="grinders\AlternateNamesGrinder.cs" />
     <Compile Include="grinders\NextGenGrinder.cs" />
