@@ -83,6 +83,7 @@ namespace RoadGrinder.commands
             var nameFieldEdit = (IFieldEdit)nameField;
             nameFieldEdit.Name_2 = "NAME";
             nameFieldEdit.Type_2 = esriFieldType.esriFieldTypeString;
+            nameFieldEdit.IsNullable_2 = false;
             nameFieldEdit.Length_2 = 30;
             fieldsEdit.AddField(nameField);
 
@@ -91,6 +92,7 @@ namespace RoadGrinder.commands
             var streettypeFieldEdit = (IFieldEdit)streettypeField;
             streettypeFieldEdit.Name_2 = "POSTTYPE";
             streettypeFieldEdit.Type_2 = esriFieldType.esriFieldTypeString;
+            streettypeFieldEdit.IsNullable_2 = false;
             streettypeFieldEdit.Length_2 = 4;
             fieldsEdit.AddField(streettypeField);
 

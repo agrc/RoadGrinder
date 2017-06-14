@@ -31,10 +31,38 @@ namespace RoadGrinder.grinders
 
         public void Grind(IWorkspace output)
         {
+            // Check for null values in the SGID Roads and AddressPoints - in the required fields before we begin.
+            Console.WriteLine("Check for null values in SGID Roads and AddressPoints: " + DateTime.Now);
+            var connectionStringSgid = @"Data Source=" + _options.SgidServer + @";Initial Catalog=" + _options.SgidDatabase + @";User ID=" + _options.SgidId + @";Password=" + _options.SgidId + @"";
+            const string checkForNullsRoadsQuery = @"select count(*) from Transportation.ROADS where CARTOCODE not in ('1','7','99') and STREETNAME is null or STREETTYPE is null or ADDR_SYS is null or PREDIR is null or SUFDIR is null or ALIAS1 is null or ALIAS1TYPE is null or ALIAS2 is null or ALIAS1TYPE is null or ACSNAME is null or ACSSUF is null;";
+            const string checkForNullsAddressPointsQuery = @"select count(*) from Location.ADDRESSPOINTS where AddNum is null or PrefixDir is null or StreetName is null or StreetType is null or SuffixDir is null or AddNumSuffix is null;";
+            using (var connection = new SqlConnection(connectionStringSgid))
+            {
+                connection.Open();
+                var rowCount = connection.ExecuteScalar<int>(checkForNullsRoadsQuery);
+                if (rowCount != 0)
+                {
+                    Console.WriteLine("Null Values found in SGID Roads in one of these fields: ADDR_SYS, PREDIR, STREETNAME, STREETTYPE, SUFDIR, ALIAS1, ALIAS1TYPE, ALIAS2, ALIAS1TYPE, ACSNAME, ACSSUF.  Remove nulls from SGID.Transportation.Roads and try again.");
+                    Console.ReadLine();
+                    return;
+                }
+            }
+            using (var connection = new SqlConnection(connectionStringSgid))
+            {
+                connection.Open();
+                var rowCount = connection.ExecuteScalar<int>(checkForNullsAddressPointsQuery);
+                if (rowCount != 0)
+                {
+                    Console.WriteLine("Null Values found in SGID AddressPoints in one of these fields: AddNum, AddNumSuffix, PrefixDir, StreetName, StreetType, SuffixDir.  Remove nulls from SGID.Location.AddressPoints and try again.");
+                    Console.ReadLine();
+                    return;
+                }
+            }
+
             var startTime = DateTime.Now;
             Console.WriteLine("Begin creating Geocode FC: " + DateTime.Now);
             IWorkspaceEdit outputEditWorkspace = null;
-
+            
             try
             {
                 var outputFeatureWorkspace = (IFeatureWorkspace)output;
@@ -42,7 +70,7 @@ namespace RoadGrinder.grinders
                 // create a feature cursor from the source roads data and loop through this subset
                 // create the query filter to filter results
                 // FOR TESTING...
-                const string geocodableRoads = @"ADDR_SYS = 'ST GEORGE'  AND STREETNAME = 'TABERNACLE' and CARTOCODE not in ('1','7','99') and 
+                const string geocodableRoads = @"ADDR_SYS = 'SALT LAKE CITY' and STREETNAME = 'BROADWAY' AND CARTOCODE not in ('1','7','99') and 
                                                     ((L_F_ADD <> 0 and L_T_ADD <> 0) OR (R_F_ADD <> 0 and R_T_ADD <> 0)) and 
                                                     STREETNAME <> '' and STREETNAME not like '%ROUNDABOUT%'";
 
@@ -149,6 +177,7 @@ namespace RoadGrinder.grinders
                     outputEditWorkspace.StopEditing(true);
                 }
 
+                Console.WriteLine("begin indexing fields: " + DateTime.Now);
                 // Add Indexes to query fields.
                 string[] fieldsToIndex = { "ADDRSYS_L", "ADDRSYS_R", "FROMADDR_L", "TOADDR_L", "FROMADDR_R", "TOADDR_R",
                     "PREDIR", "NAME", "POSTTYPE", "POSTDIR"};
@@ -156,7 +185,7 @@ namespace RoadGrinder.grinders
                 {
                     AddIndexToFieldCommand.Execute(_geocodeRoads, field + "_IDX", field);                    
                 }
-
+                Console.WriteLine("finished indexing fields: " + DateTime.Now);
 
                 #region make this a seperate command (LoadAltNamesRoads), passing in the table name and workspace
                 // load records into the altnames table for roads
@@ -400,10 +429,10 @@ namespace RoadGrinder.grinders
                 int counter = 0;
 
                 Console.WriteLine("begin altnames table for addr pnts: " + DateTime.Now);
-                var connectionStringSgid = @"Data Source=" + _options.SgidServer + @";Initial Catalog=" + _options.SgidDatabase + @";User ID=" + _options.SgidId + @";Password=" + _options.SgidId + @"";
+                //var connectionStringSgid = @"Data Source=" + _options.SgidServer + @";Initial Catalog=" + _options.SgidDatabase + @";User ID=" + _options.SgidId + @";Password=" + _options.SgidId + @"";
 
                 //const string sgidAddrPntstoVerifyQuery = @"SELECT DISTINCT AddSystem,UTAddPtID,AddNum,AddNumSuffix,PrefixDir,StreetName,StreetType,SuffixDir,UnitType, UnitID, City, ZipCode, CountyID FROM LOCATION.ADDRESSPOINTS WHERE PrefixDir <> '' AND StreetName LIKE '%[A-Z]%' AND StreetName NOT LIKE 'HIGHWAY %' and AddSystem = 'SALT LAKE CITY' AND StreetName = 'STATE';";
-                const string sgidAddrPntstoVerifyQuery = @"SELECT DISTINCT AddSystem,AddNum,PrefixDir,StreetName,StreetType,SuffixDir,City,ZipCode,CountyID FROM LOCATION.ADDRESSPOINTS WHERE PrefixDir <> '' AND StreetName LIKE '%[A-Z]%' AND StreetName NOT LIKE 'HIGHWAY %' and AddSystem = 'SALT LAKE CITY' AND StreetName = 'STATE' and AddNum = '125';";
+                const string sgidAddrPntstoVerifyQuery = @"SELECT DISTINCT AddSystem,AddNum,AddNumSuffix,PrefixDir,StreetName,StreetType,SuffixDir,City,ZipCode,CountyID FROM LOCATION.ADDRESSPOINTS WHERE PrefixDir <> '' AND StreetName LIKE '%[A-Z]%' AND StreetName NOT LIKE 'HIGHWAY %' AND AddSystem = 'SALT LAKE CITY';";
                 using (var con = new SqlConnection(connectionStringSgid))
                 {
                     con.Open();
@@ -416,7 +445,7 @@ namespace RoadGrinder.grinders
                         // check for matching address point in same address-system with different prefix
                         // Check is the SuffixDir is empty or null before creating the query
                         //string matchingAddrPntQuery = @"SELECT OBJECTID FROM LOCATION.ADDRESSPOINTS WHERE AddSystem = '" + sgidAddrPntToVerify.AddSystem + @"' AND AddNum = '" + sgidAddrPntToVerify.AddNum + @"' AND PrefixDir <> '" + sgidAddrPntToVerify.PrefixDir + @"' AND StreetName = '" + sgidAddrPntToVerify.StreetName + @"' AND StreetType = '" + sgidAddrPntToVerify.StreetType + @"' AND IsNull(SuffixDir, '') = '';";
-                        string matchingAddrPntQuery = @"SELECT Count(*) Count FROM LOCATION.ADDRESSPOINTS WHERE AddSystem = '" + sgidAddrPntToVerify.AddSystem + @"' AND AddNum = '" + sgidAddrPntToVerify.AddNum + @"' AND PrefixDir <> '" + sgidAddrPntToVerify.PrefixDir + @"' AND StreetName = '" + sgidAddrPntToVerify.StreetName + @"' AND StreetType = '" + sgidAddrPntToVerify.StreetType + @"' AND SuffixDir = '" + sgidAddrPntToVerify.SuffixDir + @"'"; 
+                        string matchingAddrPntQuery = @"SELECT Count(*) Count FROM LOCATION.ADDRESSPOINTS WHERE AddSystem = '" + sgidAddrPntToVerify.AddSystem + @"' AND AddNum = '" + sgidAddrPntToVerify.AddNum + @"' AND PrefixDir <> '" + sgidAddrPntToVerify.PrefixDir + @"' AND StreetName = '" + sgidAddrPntToVerify.StreetName + @"' AND StreetType = '" + sgidAddrPntToVerify.StreetType + @"' AND SuffixDir = '" + sgidAddrPntToVerify.SuffixDir + @"' AND AddNumSuffix = '" + sgidAddrPntToVerify.AddNumSuffix + @"';"; 
                         //string matchingAddrPntQuery = @"SELECT * FROM LOCATION.ADDRESSPOINTS WHERE AddSystem = '" + sgidAddrPntToVerify.AddSystem + @"' AND AddNum = '" + sgidAddrPntToVerify.AddNum + @"' AND PrefixDir <> '" + sgidAddrPntToVerify.PrefixDir + @"' AND StreetName = '" + sgidAddrPntToVerify.StreetName + @"' AND StreetType = '" + sgidAddrPntToVerify.StreetType + @"' AND SuffixDir = '" + sgidAddrPntToVerify.SuffixDir + @"'";
                         //if (sgidAddrPntToVerify.SuffixDir == null)
                         //{
@@ -426,7 +455,6 @@ namespace RoadGrinder.grinders
                         //{
                         //    matchingAddrPntQuery = @"SELECT OBJECTID FROM LOCATION.ADDRESSPOINTS WHERE AddSystem = '" + sgidAddrPntToVerify.AddSystem + @"' AND AddNum = '" + sgidAddrPntToVerify.AddNum + @"' AND PrefixDir <> '" + sgidAddrPntToVerify.PrefixDir + @"' AND StreetName = '" + sgidAddrPntToVerify.StreetName + @"' AND StreetType = '" + sgidAddrPntToVerify.StreetType + @"' AND SuffixDir = '" + sgidAddrPntToVerify.SuffixDir + @"'";         
                         //}
-                        
                         
                         using (var con1 = new SqlConnection(connectionStringSgid))
                         {

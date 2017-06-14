@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Text;
 using ESRI.ArcGIS.DataSourcesGDB;
 using ESRI.ArcGIS.esriSystem;
 using ESRI.ArcGIS.Geodatabase;
@@ -142,7 +143,6 @@ namespace RoadGrinder.services
             addrSysRFieldEdit.Length_2 = 30;
             fieldsEdit.AddField(addrSysRField);
 
-
             // Create a text field called "FROMADDR_L" for the fields collection.
             IField rangeL_Ffield = new FieldClass();
             var rangeL_FfieldEdit = (IFieldEdit) rangeL_Ffield;
@@ -184,6 +184,7 @@ namespace RoadGrinder.services
             var predirFieldEdit = (IFieldEdit) predirField;
             predirFieldEdit.Name_2 = "PREDIR";
             predirFieldEdit.Type_2 = esriFieldType.esriFieldTypeString;
+            predirFieldEdit.IsNullable_2 = false;
             predirFieldEdit.Length_2 = 1;
             fieldsEdit.AddField(predirField);
 
@@ -192,6 +193,7 @@ namespace RoadGrinder.services
             var nameFieldEdit = (IFieldEdit) nameField;
             nameFieldEdit.Name_2 = "NAME";
             nameFieldEdit.Type_2 = esriFieldType.esriFieldTypeString;
+            nameFieldEdit.IsNullable_2 = false;
             nameFieldEdit.Length_2 = 30;
             fieldsEdit.AddField(nameField);
 
@@ -200,6 +202,7 @@ namespace RoadGrinder.services
             var streettypeFieldEdit = (IFieldEdit) streettypeField;
             streettypeFieldEdit.Name_2 = "POSTTYPE";
             streettypeFieldEdit.Type_2 = esriFieldType.esriFieldTypeString;
+            streettypeFieldEdit.IsNullable_2 = false;
             streettypeFieldEdit.Length_2 = 4;
             fieldsEdit.AddField(streettypeField);
 
@@ -208,6 +211,7 @@ namespace RoadGrinder.services
             var sufdirFieldEdit = (IFieldEdit) sufdirField;
             sufdirFieldEdit.Name_2 = "POSTDIR";
             sufdirFieldEdit.Type_2 = esriFieldType.esriFieldTypeString;
+            sufdirFieldEdit.IsNullable_2 = false;
             sufdirFieldEdit.Length_2 = 2;
             fieldsEdit.AddField(sufdirField);
 
