@@ -24,7 +24,7 @@ namespace RoadGrinder.commands
             Console.WriteLine("begin altnames table for addr pnts: " + DateTime.Now);
 
             const string getSgidAddrPntsPredirNotNeededQuery = @"select a.*
-                        from (SELECT DISTINCT AddSystem,AddNum,AddNumSuffix,PrefixDir,StreetName,StreetType,SuffixDir,City,ZipCode,CountyID FROM LOCATION.ADDRESSPOINTS WHERE PrefixDir <> '' AND StreetName LIKE '%[A-Z]%' AND StreetName NOT LIKE 'HIGHWAY %' AND AddSystem = 'SALT LAKE CITY') a
+                        from (SELECT DISTINCT AddSystem,AddNum,AddNumSuffix,PrefixDir,StreetName,StreetType,SuffixDir,City,ZipCode,CountyID FROM LOCATION.ADDRESSPOINTS WHERE PrefixDir <> '' AND StreetName LIKE '%[A-Z]%' AND StreetName NOT LIKE 'HIGHWAY %') a
                         where NOT EXISTS
                         (
 	                        select null
