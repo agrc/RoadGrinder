@@ -232,7 +232,7 @@ namespace RoadGrinder.commands
                             // Remove the PREDIR value from the field map
                             var valueMapNewSchemaNoPredir = valueMapNewSchema;
                             valueMapNewSchemaNoPredir.Remove("PREDIR");
-                            EsriHelper.InsertRowInto(geocodeRoadFeature, altnameTableRoads, valueMapNewSchema);
+                            EsriHelper.InsertRowInto(geocodeRoadFeature, altnameTableRoads, valueMapNewSchema, true, true);
 
                             consoleCounter = consoleCounter + 1;
                             Console.WriteLine(consoleCounter + ": not found in the other grid: " + geocodeRoadFeature.get_Value(geocodeRoadFeature.Fields.FindField("OBJECTID")).ToString());

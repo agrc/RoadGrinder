@@ -275,6 +275,9 @@ namespace RoadGrinder.services
                 case "AtlNamesRoads":
                     fields = commands.CreateFieldsCollectionRoadsCommand.Execute();;
                     break;
+                case "RoadsScratchData":
+                    fields = commands.CreateFieldsCollectionRoadsCommand.Execute();;
+                    break;
                 default:
                     Console.WriteLine("Name for altnames table not provided.");
                     break;
@@ -368,16 +371,47 @@ namespace RoadGrinder.services
         #endregion
 
         #region "Overloaded Method - Insert row into table, built from arcgis feature"
-        public static void InsertRowInto(IFeature feature, ITable table, Dictionary<string, IndexFieldValue> fieldValues)
+        public static void InsertRowInto(IFeature feature, ITable table, Dictionary<string, IndexFieldValue> fieldValues, bool needsStreetType, bool recordFromOverlapCheck)
         {
             try
             {
                 var newRow = table.CreateRow();
-
-                foreach (var fieldValue in fieldValues)
+                if (recordFromOverlapCheck)
                 {
-                    newRow.set_Value(newRow.Fields.FindField(fieldValue.Key), fieldValue.Value.Value);
+                    foreach (var fieldValue in fieldValues)
+                    {
+                        newRow.set_Value(newRow.Fields.FindField(fieldValue.Key), fieldValue.Value.Value);
+                    }                    
                 }
+                else
+                {
+                    // for now we might have to use this format - begin...
+                    newRow.set_Value(newRow.Fields.FindField("ADDRSYS_L"), fieldValues["ADDR_SYS"].Value);
+                    newRow.set_Value(newRow.Fields.FindField("ADDRSYS_R"), fieldValues["ADDR_SYS"].Value);
+                    newRow.set_Value(newRow.Fields.FindField("FROMADDR_L"), fieldValues["L_F_ADD"].Value);
+                    newRow.set_Value(newRow.Fields.FindField("TOADDR_L"), fieldValues["L_T_ADD"].Value);
+                    newRow.set_Value(newRow.Fields.FindField("FROMADDR_R"), fieldValues["R_F_ADD"].Value);
+                    newRow.set_Value(newRow.Fields.FindField("TOADDR_R"), fieldValues["R_T_ADD"].Value);
+                    newRow.set_Value(newRow.Fields.FindField("PREDIR"), fieldValues["PREDIR"].Value);
+                    newRow.set_Value(newRow.Fields.FindField("NAME"), fieldValues["STREETNAME"].Value);
+                    newRow.set_Value(newRow.Fields.FindField("POSTDIR"), fieldValues["SUFDIR"].Value);
+                    newRow.set_Value(newRow.Fields.FindField("ZIPCODE_L"), fieldValues["ZIPLEFT"].Value);
+                    newRow.set_Value(newRow.Fields.FindField("ZIPCODE_R"), fieldValues["ZIPRIGHT"].Value);
+                    newRow.set_Value(newRow.Fields.FindField("GLOBALID_SGID"), fieldValues["GLOBALID"].Value);
+
+                    if (needsStreetType)
+                    {
+                        newRow.set_Value(newRow.Fields.FindField("POSTTYPE"), fieldValues["STREETTYPE"].Value);
+                    }
+                    else
+                    {
+                        newRow.set_Value(newRow.Fields.FindField("POSTTYPE"), string.Empty);
+                    }
+                    // for now we might have to use this format - ...end                        
+                }
+
+
+
 
                 newRow.Store();
             }
