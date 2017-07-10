@@ -116,13 +116,13 @@ namespace RoadGrinder.commands
             countyIdFieldEdit.Length_2 = 15;
             fieldsEdit.AddField(countyIdField);
 
-            //// Create a text field called "UTAddPtID" for the fields collection - to join back to the feature class or sgid.
-            //IField uniqueIdField = new FieldClass();
-            //var uniqueIdFieldEdit = (IFieldEdit) uniqueIdField;
-            //uniqueIdFieldEdit.Name_2 = "UTAddPtID";
-            //uniqueIdFieldEdit.Type_2 = esriFieldType.esriFieldTypeString;
-            //uniqueIdFieldEdit.Length_2 = 140;
-            //fieldsEdit.AddField(uniqueIdField);
+            // Create a text field called "UTAddPtID" for the fields collection - to join back to the feature class or sgid.
+            IField uniqueIdField = new FieldClass();
+            var uniqueIdFieldEdit = (IFieldEdit)uniqueIdField;
+            uniqueIdFieldEdit.Name_2 = "UTAddPtID";
+            uniqueIdFieldEdit.Type_2 = esriFieldType.esriFieldTypeString;
+            uniqueIdFieldEdit.Length_2 = 140;
+            fieldsEdit.AddField(uniqueIdField);
 
             return fields;
         }

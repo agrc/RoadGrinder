@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Data.SqlClient;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Dapper;
 using ESRI.ArcGIS.Geodatabase;
@@ -24,7 +25,7 @@ namespace RoadGrinder.commands
             Console.WriteLine("begin altnames table for addr pnts: " + DateTime.Now);
 
             const string getSgidAddrPntsPredirNotNeededQuery = @"select a.*
-                        from (SELECT DISTINCT AddSystem,AddNum,AddNumSuffix,PrefixDir,StreetName,StreetType,SuffixDir,City,ZipCode,CountyID FROM LOCATION.ADDRESSPOINTS WHERE PrefixDir <> '' AND StreetName LIKE '%[A-Z]%' AND StreetName NOT LIKE 'HIGHWAY %') a
+                        from (SELECT DISTINCT AddSystem,AddNum,AddNumSuffix,PrefixDir,StreetName,StreetType,SuffixDir,City,ZipCode,CountyID,(ltrim(rtrim(AddSystem)) + ' | ' + ltrim(rtrim(AddNum)) + ' ' + ltrim(rtrim(AddNumSuffix)) + ' ' + ltrim(rtrim(PrefixDir)) + ' ' + ltrim(rtrim(StreetName)) + ' ' + ltrim(rtrim(StreetType + ' ' + ltrim(rtrim(SuffixDir)))))UTAddPtID FROM LOCATION.ADDRESSPOINTS WHERE PrefixDir <> '' AND StreetName LIKE '%[A-Z]%' AND StreetName NOT LIKE 'HIGHWAY %') a
                         where NOT EXISTS
                         (
 	                        select null
@@ -51,7 +52,17 @@ namespace RoadGrinder.commands
                 {
                     // add the addresspoint to the altnames table
                     var dictRow = sgidAddrPnt as IDictionary<string, object>;
+                    
+                    // Remove the PREDIR key/value from the Dictionary.
                     dictRow.Remove("PrefixDir");
+
+                    // replace the possible double space in the UTAddPtID field from missing AddNumSuffix
+                    // get the value from the field
+                    string stringRemovedDblSpace = dictRow["UTAddPtID"].ToString();
+                    stringRemovedDblSpace = Regex.Replace(stringRemovedDblSpace, @"\s+", " ");
+                    dictRow.Add("UTAddPtID", stringRemovedDblSpace);
+
+                    // Insert these values into the esri fgdb table.
                     EsriHelper.InsertRowInto(altnameTableAddrPnts, dictRow);
                 } 
                 
