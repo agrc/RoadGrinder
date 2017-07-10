@@ -72,7 +72,7 @@ namespace RoadGrinder.grinders
 
                 // create a feature cursor from the source roads data and loop through this subset
                 // create the query filter to filter results
-                const string geocodableRoads = @"ADDR_SYS = 'KAYSVILLE' AND CARTOCODE not in ('1','7','99') and 
+                const string geocodableRoads = @"CARTOCODE not in ('1','7','99') and 
                                                     ((L_F_ADD <> 0 and L_T_ADD <> 0) OR (R_F_ADD <> 0 and R_T_ADD <> 0)) and 
                                                     STREETNAME <> '' and STREETNAME not like '%ROUNDABOUT%'";
 
