@@ -57,10 +57,14 @@ namespace RoadGrinder.commands
                     dictRow.Remove("PrefixDir");
 
                     // replace the possible double space in the UTAddPtID field from missing AddNumSuffix
-                    // get the value from the field
-                    string stringRemovedDblSpace = dictRow["UTAddPtID"].ToString();
+                    // get the value from the field, and trim it
+                    string stringRemovedDblSpace = dictRow["UTAddPtID"].ToString().Trim();
                     stringRemovedDblSpace = Regex.Replace(stringRemovedDblSpace, @"\s+", " ");
-                    dictRow.Add("UTAddPtID", stringRemovedDblSpace);
+                    if (stringRemovedDblSpace != dictRow["UTAddPtID"].ToString())
+                    {
+                        dictRow.Remove("UTAddPtID");
+                        dictRow.Add("UTAddPtID", stringRemovedDblSpace);                        
+                    }
 
                     // Insert these values into the esri fgdb table.
                     EsriHelper.InsertRowInto(altnameTableAddrPnts, dictRow);
