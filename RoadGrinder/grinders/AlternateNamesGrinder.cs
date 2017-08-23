@@ -37,8 +37,8 @@ namespace RoadGrinder.grinders
             // Check for null values in the SGID Roads and AddressPoints - in the required fields before we begin.
             Console.WriteLine("Check for null values in SGID Roads and AddressPoints: " + DateTime.Now);
             var connectionStringSgid = @"Data Source=" + _options.SgidServer + @";Initial Catalog=" + _options.SgidDatabase + @";User ID=" + _options.SgidId + @";Password=" + _options.SgidId + @"";
-            const string checkForNullsRoadsQuery = @"select count(*) from Transportation.ROADS where CARTOCODE not in ('1','7','99') and STREETNAME is null or STREETTYPE is null or ADDR_SYS is null or PREDIR is null or SUFDIR is null or ALIAS1 is null or ALIAS1TYPE is null or ALIAS2 is null or ALIAS1TYPE is null or ACSNAME is null or ACSSUF is null;";
-            const string checkForNullsAddressPointsQuery = @"select count(*) from Location.ADDRESSPOINTS where AddNum is null or PrefixDir is null or StreetName is null or StreetType is null or SuffixDir is null or AddNumSuffix is null;";
+            const string checkForNullsRoadsQuery = @"select count(*) from Transportation.ROADS (nolock) where CARTOCODE not in ('1','7','99') and STREETNAME is null or STREETTYPE is null or ADDR_SYS is null or PREDIR is null or SUFDIR is null or ALIAS1 is null or ALIAS1TYPE is null or ALIAS2 is null or ALIAS1TYPE is null or ACSNAME is null or ACSSUF is null;";
+            const string checkForNullsAddressPointsQuery = @"select count(*) from Location.ADDRESSPOINTS (nolock) where AddNum is null or PrefixDir is null or StreetName is null or StreetType is null or SuffixDir is null or AddNumSuffix is null;";
             using (var connection = new SqlConnection(connectionStringSgid))
             {
                 connection.Open();
@@ -57,8 +57,8 @@ namespace RoadGrinder.grinders
                 if (rowCount != 0)
                 {
                     Console.WriteLine(rowCount + " Null Values were found in SGID AddressPoints in one of these fields: AddNum, AddNumSuffix, PrefixDir, StreetName, StreetType, SuffixDir.  Remove nulls from SGID.Location.AddressPoints and try again.");
-                    Console.ReadLine();
-                    return;
+                    //Console.ReadLine();
+                    //return;
                 }
             }
 
@@ -287,7 +287,19 @@ namespace RoadGrinder.grinders
             _scratchFGDB = EsriHelper.CreateFileGdbWorkspace(_options.OutputGeodatabase, "RoadGrinderScratchWS");
 
             var scratchOutputFeatureWorkspace = (IFeatureWorkspace)_scratchFGDB;
-            //var outputWorkspace2 = (IWorkspace2)_scratchFGDB;
+            var outputWorkspace2 = (IWorkspace2)_scratchFGDB;
+            var outputFeatureWorkspace = (IFeatureWorkspace)scratchOutputFeatureWorkspace;
+
+
+            //if (EsriHelper.NameExists(outputWorkspace2, GeocodeRoadsTableName + "RoadsScratchData", esriDatasetType.esriDTTable))
+            //{
+            //    // rename existing table
+            //    var renameTable = outputFeatureWorkspace.OpenTable(GeocodeRoadsTableName + "RoadsScratchData");
+            //    // releaser.ManageLifetime(renameTable);
+
+            //    var outputDataset = (IDataset)renameTable;
+            //    outputDataset.Rename(string.Format("{0}{1}{2}", GeocodeRoadsTableName + "RoadsScratchData", "ReplacedOn", DateTime.Now.ToString("yyyyMMdd")));
+            //}
 
             _scratchRoadsFC = EsriHelper.CreateFeatureClass(GeocodeRoadsScratchFeatureClassName, null, scratchOutputFeatureWorkspace);
 
