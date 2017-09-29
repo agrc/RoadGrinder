@@ -37,7 +37,7 @@ namespace RoadGrinder.grinders
             // Check for null values in the SGID Roads and AddressPoints - in the required fields before we begin.
             Console.WriteLine("Check for null values in SGID Roads and AddressPoints: " + DateTime.Now);
             var connectionStringSgid = @"Data Source=" + _options.SgidServer + @";Initial Catalog=" + _options.SgidDatabase + @";User ID=" + _options.SgidId + @";Password=" + _options.SgidId + @"";
-            const string checkForNullsRoadsQuery = @"select count(*) from Transportation.ROADS (nolock) where CARTOCODE not in ('1','7','99') and STREETNAME is null or STREETTYPE is null or ADDR_SYS is null or PREDIR is null or SUFDIR is null or ALIAS1 is null or ALIAS1TYPE is null or ALIAS2 is null or ALIAS1TYPE is null or ACSNAME is null or ACSSUF is null;";
+            const string checkForNullsRoadsQuery = @"select count(*) from Transportation.RoadsODM (nolock) where CARTOCODE not in ('1','7','99') and STREETNAME is null or STREETTYPE is null or ADDR_SYS is null or PREDIR is null or SUFDIR is null or ALIAS1 is null or ALIAS1TYPE is null or ALIAS2 is null or ALIAS1TYPE is null or ACSNAME is null or ACSSUF is null;";
             const string checkForNullsAddressPointsQuery = @"select count(*) from Location.ADDRESSPOINTS (nolock) where AddNum is null or PrefixDir is null or StreetName is null or StreetType is null or SuffixDir is null or AddNumSuffix is null;";
             using (var connection = new SqlConnection(connectionStringSgid))
             {
