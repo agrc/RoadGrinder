@@ -37,7 +37,7 @@ namespace RoadGrinder.grinders
             // Check for null values in the SGID Roads and AddressPoints - in the required fields before we begin.
             Console.WriteLine("Check for null values in SGID Roads and AddressPoints: " + DateTime.Now);
             var connectionStringSgid = @"Data Source=" + _options.SgidServer + @";Initial Catalog=" + _options.SgidDatabase + @";User ID=" + _options.SgidId + @";Password=" + _options.SgidId + @"";
-            const string checkForNullsRoadsQuery = @"select count(*) from Transportation.RoadsODM (nolock) where CARTOCODE not in ('1','7','99') and STREETNAME is null or STREETTYPE is null or ADDR_SYS is null or PREDIR is null or SUFDIR is null or ALIAS1 is null or ALIAS1TYPE is null or ALIAS2 is null or ALIAS1TYPE is null or ACSNAME is null or ACSSUF is null;";
+            const string checkForNullsRoadsQuery = @"select count(*) from Transportation.Roads (nolock) where CARTOCODE not in ('1','7','99') and NAME is null or POSTTYPE is null or ADDRSYS_L is null or ADDRSYS_R is null or PREDIR is null or POSTDIR is null or A1_NAME is null or A1_POSTTYPE is null or A2_NAME is null or A2_POSTTYPE is null or AN_NAME is null or AN_POSTDIR is null;";
             const string checkForNullsAddressPointsQuery = @"select count(*) from Location.ADDRESSPOINTS (nolock) where AddNum is null or PrefixDir is null or StreetName is null or StreetType is null or SuffixDir is null or AddNumSuffix is null;";
             using (var connection = new SqlConnection(connectionStringSgid))
             {
@@ -45,7 +45,7 @@ namespace RoadGrinder.grinders
                 var rowCount = connection.ExecuteScalar<int>(checkForNullsRoadsQuery);
                 if (rowCount != 0)
                 {
-                    Console.WriteLine(rowCount + " Null Values were found in SGID Roads in one of these fields: ADDR_SYS, PREDIR, STREETNAME, STREETTYPE, SUFDIR, ALIAS1, ALIAS1TYPE, ALIAS2, ALIAS1TYPE, ACSNAME, ACSSUF.  Remove nulls from SGID.Transportation.Roads and try again.");
+                    Console.WriteLine(rowCount + " Null Values were found in SGID Roads in one of these fields: ADDRSYS_L, ADDRSYS_R PREDIR, NAME, POSTTYPE, POSTDIR, A1_NAME, A1_POSTTYPE, A2_NAME, A2_POSTTYPE, AN_NAME, AN_POSTDIR.  Remove nulls from SGID.Transportation.Roads and try again.");
                     Console.ReadLine();
                     return;
                 }
@@ -73,8 +73,8 @@ namespace RoadGrinder.grinders
                 // create a feature cursor from the source roads data and loop through this subset
                 // create the query filter to filter results
                 const string geocodableRoads = @"CARTOCODE not in ('1','7','99') and 
-                                                    ((L_F_ADD <> 0 and L_T_ADD <> 0) OR (R_F_ADD <> 0 and R_T_ADD <> 0)) and 
-                                                    STREETNAME <> '' and STREETNAME not like '%ROUNDABOUT%'";
+                                                    ((FROMADDR_L <> 0 and TOADDR_L <> 0) OR (FROMADDR_R <> 0 and TOADDR_R <> 0)) and 
+                                                    NAME <> '' and NAME not like '%ROUNDABOUT%'";
 
                 // GO LIVE...
                 //geocodableRoads = @"CARTOCODE not in ('1','7','99') and ((L_F_ADD <> 0 and L_T_ADD <> 0) OR (R_F_ADD <> 0 and R_T_ADD <> 0)) and STREETNAME <> '' and STREETNAME not like '%ROUNDABOUT%'";
@@ -101,9 +101,9 @@ namespace RoadGrinder.grinders
                     IFeature roadFeature;
                     var fieldIndexMap = new FindIndexByNameCommand(_roads, new[]
                     {
-                        "ADDR_SYS", "L_F_ADD", "L_T_ADD", "R_F_ADD", "R_T_ADD", "PREDIR",
-                        "STREETNAME", "STREETTYPE", "SUFDIR", "ALIAS1", "ALIAS1TYPE", "ALIAS2",
-                        "ALIAS2TYPE", "ACSNAME", "ACSSUF", "ZIPLEFT", "ZIPRIGHT", "GLOBALID"
+                        "ADDRSYS_L", "ADDRSYS_R", "FROMADDR_L", "TOADDR_L", "FROMADDR_R", "R_T_ADD", "TOADDR_R",
+                        "NAME", "POSTTYPE", "POSTDIR", "A1_NAME", "A1_POSTTYPE", "A2_NAME",
+                        "A2_POSTTYPE", "AN_NAME", "AN_POSTDIR", "ZIPCODE_L", "ZIPCODE_R", "GLOBALID"
                     }).Execute();
 
                     // loop through the sgid roads' feature cursor
@@ -113,7 +113,7 @@ namespace RoadGrinder.grinders
 
                         // begin to populate the geocode feature class in the newly-created file geodatabase
                         // check if this segment has a primary streetname
-                        if (!string.IsNullOrEmpty(valueMap["STREETNAME"].Value.ToString()))
+                        if (!string.IsNullOrEmpty(valueMap["NAME"].Value.ToString()))
                         {
                             // only write necessary key/values
                             var streetValueMap = valueMap;
@@ -126,17 +126,17 @@ namespace RoadGrinder.grinders
                             EsriHelper.InsertFeatureInto(roadFeature, _scratchRoadsFC, streetValueMap, true);
                         }
                         // check if this segment has an alias name
-                        if (!string.IsNullOrEmpty(valueMap["ALIAS1"].Value.ToString()))
+                        if (!string.IsNullOrEmpty(valueMap["A1_NAME"].Value.ToString()))
                         {
                             var aliasValueMap = valueMap;
-                            aliasValueMap["STREETNAME"] = aliasValueMap["ALIAS1"];
-                            aliasValueMap["STREETTYPE"] = aliasValueMap["ALIAS1TYPE"];
+                            aliasValueMap["NAME"] = aliasValueMap["A1_NAME"];
+                            aliasValueMap["POSTTYPE"] = aliasValueMap["A1_POSTTYPE"];
 
                             // check if primary name is acs, if so remove the sufdir for new alias1-based feature
-                            if (!aliasValueMap["STREETNAME"].ToString().Any(char.IsLetter))
+                            if (!aliasValueMap["NAME"].ToString().Any(char.IsLetter))
                             {
                                 // acs primary street
-                                aliasValueMap.Remove("SUFDIR");
+                                aliasValueMap.Remove("POSTDIR");
                             }
 
                             //RemoveKeys(aliasValueMap);
@@ -149,18 +149,18 @@ namespace RoadGrinder.grinders
                             EsriHelper.InsertFeatureInto(roadFeature, _scratchRoadsFC, aliasValueMap, true);
                         }
                         // check if this segment has a second alias name
-                        if (!string.IsNullOrEmpty(valueMap["ALIAS2"].Value.ToString()))
+                        if (!string.IsNullOrEmpty(valueMap["A2_NAME"].Value.ToString()))
                         {
                             var aliasValueMap = valueMap;
-                            aliasValueMap["STREETNAME"] = aliasValueMap["ALIAS2"];
-                            aliasValueMap["STREETTYPE"] = aliasValueMap["ALIAS2TYPE"];                            
+                            aliasValueMap["NAME"] = aliasValueMap["A2_NAME"];
+                            aliasValueMap["POSTTYPE"] = aliasValueMap["A2_POSTTYPE"];                            
                             
                             // check if primary name is acs, if so remove the sufdir for new alias2-based feature
                             // check if primary name is acs, if so remove the sufdir for new alias1-based feature
-                            if (!aliasValueMap["STREETNAME"].ToString().Any(char.IsLetter))
+                            if (!aliasValueMap["NAME"].ToString().Any(char.IsLetter))
                             {
                                 // acs primary street
-                                aliasValueMap.Remove("SUFDIR");
+                                aliasValueMap.Remove("POSTDIR");
                             }
 
                             //RemoveKeys(aliasValueMap);
@@ -173,13 +173,13 @@ namespace RoadGrinder.grinders
                             EsriHelper.InsertFeatureInto(roadFeature, _scratchRoadsFC, aliasValueMap, true);
                         }
                         // check if this segment has an acs alias name
-                        if (!string.IsNullOrEmpty(valueMap["ACSNAME"].Value.ToString()))
+                        if (!string.IsNullOrEmpty(valueMap["AN_NAME"].Value.ToString()))
                         {
                             var acsValueMap = valueMap;
-                            acsValueMap["STREETNAME"] = acsValueMap["ACSNAME"];
-                            acsValueMap["SUFDIR"] = acsValueMap["ACSSUF"];
+                            acsValueMap["NAME"] = acsValueMap["AN_NAME"];
+                            acsValueMap["POSTDIR"] = acsValueMap["AN_POSTDIR"];
 
-                            acsValueMap.Remove("STREETTYPE");
+                            acsValueMap.Remove("POSTTYPE");
                             //RemoveKeys(acsValueMap);
 
                             // create a new feature in the altnames table
@@ -307,13 +307,12 @@ namespace RoadGrinder.grinders
 
         private static void RemoveKeys(IDictionary<string, IndexFieldValue> streetValueMap)
         {
-            var unused = new[] { "ALIAS1", "ALIAS2", "ALIAS1TYPE", "ALIAS2TYPE", "ACSNAME", "ACSSUF" };
+            var unused = new[] { "A1_NAME", "A2_NAME", "A1_POSTTYPE", "A2_POSTTYPE", "AN_NAME", "AN_POSTDIR" };
 
             foreach (var key in unused)
             {
                 streetValueMap.Remove(key);
             }
         }
-
     }
 }

@@ -37,7 +37,7 @@ namespace RoadGrinder
                 return;
             }
 
-            const string roadsFeatureClassName = "SGID10.TRANSPORTATION.RoadsODM";
+            const string roadsFeatureClassName = "SGID10.TRANSPORTATION.Roads";
             var start = Stopwatch.StartNew();
 
             //ESRI License Initializer generated code

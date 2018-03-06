@@ -331,26 +331,25 @@ namespace RoadGrinder.services
                 //foreach (var fieldValue in fieldValues)
                 //{
                 //    newFeature.set_Value(newFeature.Fields.FindField(fieldValue.Key), fieldValue.Value.Value);
-
                 //}
 
                 // for now we might have to use this format - begin...
-                newFeature.set_Value(newFeature.Fields.FindField("ADDRSYS_L"), fieldValues["ADDR_SYS"].Value);
-                newFeature.set_Value(newFeature.Fields.FindField("ADDRSYS_R"), fieldValues["ADDR_SYS"].Value);
-                newFeature.set_Value(newFeature.Fields.FindField("FROMADDR_L"), fieldValues["L_F_ADD"].Value);
-                newFeature.set_Value(newFeature.Fields.FindField("TOADDR_L"), fieldValues["L_T_ADD"].Value);
-                newFeature.set_Value(newFeature.Fields.FindField("FROMADDR_R"), fieldValues["R_F_ADD"].Value);
-                newFeature.set_Value(newFeature.Fields.FindField("TOADDR_R"), fieldValues["R_T_ADD"].Value);
+                newFeature.set_Value(newFeature.Fields.FindField("ADDRSYS_L"), fieldValues["ADDRSYS_L"].Value);
+                newFeature.set_Value(newFeature.Fields.FindField("ADDRSYS_R"), fieldValues["ADDRSYS_R"].Value);
+                newFeature.set_Value(newFeature.Fields.FindField("FROMADDR_L"), fieldValues["FROMADDR_L"].Value);
+                newFeature.set_Value(newFeature.Fields.FindField("TOADDR_L"), fieldValues["TOADDR_L"].Value);
+                newFeature.set_Value(newFeature.Fields.FindField("FROMADDR_R"), fieldValues["FROMADDR_R"].Value);
+                newFeature.set_Value(newFeature.Fields.FindField("TOADDR_R"), fieldValues["TOADDR_R"].Value);
                 newFeature.set_Value(newFeature.Fields.FindField("PREDIR"), fieldValues["PREDIR"].Value);
-                newFeature.set_Value(newFeature.Fields.FindField("NAME"), fieldValues["STREETNAME"].Value);
-                newFeature.set_Value(newFeature.Fields.FindField("POSTDIR"), fieldValues["SUFDIR"].Value);
-                newFeature.set_Value(newFeature.Fields.FindField("ZIPCODE_L"), fieldValues["ZIPLEFT"].Value);
-                newFeature.set_Value(newFeature.Fields.FindField("ZIPCODE_R"), fieldValues["ZIPRIGHT"].Value);
+                newFeature.set_Value(newFeature.Fields.FindField("NAME"), fieldValues["NAME"].Value);
+                newFeature.set_Value(newFeature.Fields.FindField("POSTDIR"), fieldValues["POSTDIR"].Value);
+                newFeature.set_Value(newFeature.Fields.FindField("ZIPCODE_L"), fieldValues["ZIPCODE_L"].Value);
+                newFeature.set_Value(newFeature.Fields.FindField("ZIPCODE_R"), fieldValues["ZIPCODE_R"].Value);
                 newFeature.set_Value(newFeature.Fields.FindField("GLOBALID_SGID"), fieldValues["GLOBALID"].Value);
 
                 if (needsStreetType)
                 {
-                    newFeature.set_Value(newFeature.Fields.FindField("POSTTYPE"), fieldValues["STREETTYPE"].Value);
+                    newFeature.set_Value(newFeature.Fields.FindField("POSTTYPE"), fieldValues["POSTTYPE"].Value);
                 }
                 else
                 {
@@ -386,22 +385,22 @@ namespace RoadGrinder.services
                 else
                 {
                     // for now we might have to use this format - begin...
-                    newRow.set_Value(newRow.Fields.FindField("ADDRSYS_L"), fieldValues["ADDR_SYS"].Value);
-                    newRow.set_Value(newRow.Fields.FindField("ADDRSYS_R"), fieldValues["ADDR_SYS"].Value);
-                    newRow.set_Value(newRow.Fields.FindField("FROMADDR_L"), fieldValues["L_F_ADD"].Value);
-                    newRow.set_Value(newRow.Fields.FindField("TOADDR_L"), fieldValues["L_T_ADD"].Value);
-                    newRow.set_Value(newRow.Fields.FindField("FROMADDR_R"), fieldValues["R_F_ADD"].Value);
-                    newRow.set_Value(newRow.Fields.FindField("TOADDR_R"), fieldValues["R_T_ADD"].Value);
+                    newRow.set_Value(newRow.Fields.FindField("ADDRSYS_L"), fieldValues["ADDRSYS_L"].Value);
+                    newRow.set_Value(newRow.Fields.FindField("ADDRSYS_R"), fieldValues["ADDRSYS_R"].Value);
+                    newRow.set_Value(newRow.Fields.FindField("FROMADDR_L"), fieldValues["FROMADDR_L"].Value);
+                    newRow.set_Value(newRow.Fields.FindField("TOADDR_L"), fieldValues["TOADDR_L"].Value);
+                    newRow.set_Value(newRow.Fields.FindField("FROMADDR_R"), fieldValues["FROMADDR_R"].Value);
+                    newRow.set_Value(newRow.Fields.FindField("TOADDR_R"), fieldValues["TOADDR_R"].Value);
                     newRow.set_Value(newRow.Fields.FindField("PREDIR"), fieldValues["PREDIR"].Value);
-                    newRow.set_Value(newRow.Fields.FindField("NAME"), fieldValues["STREETNAME"].Value);
-                    newRow.set_Value(newRow.Fields.FindField("POSTDIR"), fieldValues["SUFDIR"].Value);
-                    newRow.set_Value(newRow.Fields.FindField("ZIPCODE_L"), fieldValues["ZIPLEFT"].Value);
-                    newRow.set_Value(newRow.Fields.FindField("ZIPCODE_R"), fieldValues["ZIPRIGHT"].Value);
+                    newRow.set_Value(newRow.Fields.FindField("NAME"), fieldValues["NAME"].Value);
+                    newRow.set_Value(newRow.Fields.FindField("POSTDIR"), fieldValues["POSTDIR"].Value);
+                    newRow.set_Value(newRow.Fields.FindField("ZIPCODE_L"), fieldValues["ZIPCODE_L"].Value);
+                    newRow.set_Value(newRow.Fields.FindField("ZIPCODE_R"), fieldValues["ZIPCODE_R"].Value);
                     newRow.set_Value(newRow.Fields.FindField("GLOBALID_SGID"), fieldValues["GLOBALID"].Value);
 
                     if (needsStreetType)
                     {
-                        newRow.set_Value(newRow.Fields.FindField("POSTTYPE"), fieldValues["STREETTYPE"].Value);
+                        newRow.set_Value(newRow.Fields.FindField("POSTTYPE"), fieldValues["POSTTYPE"].Value);
                     }
                     else
                     {
@@ -409,9 +408,6 @@ namespace RoadGrinder.services
                     }
                     // for now we might have to use this format - ...end                        
                 }
-
-
-
 
                 newRow.Store();
             }
