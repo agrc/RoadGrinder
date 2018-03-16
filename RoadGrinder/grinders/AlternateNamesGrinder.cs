@@ -101,9 +101,9 @@ namespace RoadGrinder.grinders
                     IFeature roadFeature;
                     var fieldIndexMap = new FindIndexByNameCommand(_roads, new[]
                     {
-                        "ADDRSYS_L", "ADDRSYS_R", "FROMADDR_L", "TOADDR_L", "FROMADDR_R", "R_T_ADD", "TOADDR_R",
+                        "ADDRSYS_L", "ADDRSYS_R", "FROMADDR_L", "TOADDR_L", "FROMADDR_R", "TOADDR_R", "PREDIR",
                         "NAME", "POSTTYPE", "POSTDIR", "A1_NAME", "A1_POSTTYPE", "A2_NAME",
-                        "A2_POSTTYPE", "AN_NAME", "AN_POSTDIR", "ZIPCODE_L", "ZIPCODE_R", "GLOBALID"
+                        "A2_POSTTYPE", "AN_NAME", "AN_POSTDIR", "ZIPCODE_L", "ZIPCODE_R", "GlobalID"
                     }).Execute();
 
                     // loop through the sgid roads' feature cursor

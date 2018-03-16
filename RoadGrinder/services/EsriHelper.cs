@@ -345,7 +345,7 @@ namespace RoadGrinder.services
                 newFeature.set_Value(newFeature.Fields.FindField("POSTDIR"), fieldValues["POSTDIR"].Value);
                 newFeature.set_Value(newFeature.Fields.FindField("ZIPCODE_L"), fieldValues["ZIPCODE_L"].Value);
                 newFeature.set_Value(newFeature.Fields.FindField("ZIPCODE_R"), fieldValues["ZIPCODE_R"].Value);
-                newFeature.set_Value(newFeature.Fields.FindField("GLOBALID_SGID"), fieldValues["GLOBALID"].Value);
+                newFeature.set_Value(newFeature.Fields.FindField("GLOBALID_SGID"), fieldValues["GlobalID"].Value);
 
                 if (needsStreetType)
                 {
@@ -396,7 +396,7 @@ namespace RoadGrinder.services
                     newRow.set_Value(newRow.Fields.FindField("POSTDIR"), fieldValues["POSTDIR"].Value);
                     newRow.set_Value(newRow.Fields.FindField("ZIPCODE_L"), fieldValues["ZIPCODE_L"].Value);
                     newRow.set_Value(newRow.Fields.FindField("ZIPCODE_R"), fieldValues["ZIPCODE_R"].Value);
-                    newRow.set_Value(newRow.Fields.FindField("GLOBALID_SGID"), fieldValues["GLOBALID"].Value);
+                    newRow.set_Value(newRow.Fields.FindField("GLOBALID_SGID"), fieldValues["GlobalID"].Value);
 
                     if (needsStreetType)
                     {

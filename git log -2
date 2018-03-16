@@ -1,0 +1,198 @@
+[33mcommit ddc89e9922533f7bfb2bcb4460830e91267b21c0[m
+Author: Greg Bunce <gbunce@utah.gov>
+Date:   Fri Sep 29 13:55:29 2017 -0600
+
+    updated SGID dataset name to RoadsODM
+
+[33mcommit 081bf5d3376fac44d9f75f1b6ba22ed71becd5a7[m
+Author: Greg Bunce <gbunce@utah.gov>
+Date:   Wed Aug 23 15:31:29 2017 -0600
+
+    trim nulls fix
+
+[33mcommit e0b2281ab915d2ada0f1cbc1a1a229a99d07002b[m
+Author: Greg Bunce <gbunce@utah.gov>
+Date:   Fri Aug 18 13:45:39 2017 -0600
+
+    trimed-utaddptid-field
+
+[33mcommit b2479281a2cc268da94c82d12b0f4dccd39ee4e8[m
+Author: Greg Bunce <gbunce@utah.gov>
+Date:   Mon Jul 10 16:06:33 2017 -0600
+
+    added field and code to join back to sgid address points
+
+[33mcommit c72fbe08978f2c19cfb264c54da04f9e05870086[m
+Author: Greg Bunce <gbunce@utah.gov>
+Date:   Mon Jul 10 10:30:30 2017 -0600
+
+    altered queries to run grinder on statewide data
+
+[33mcommit 41994f5ad918bd62c6b0228ea891e6d908e3c354[m
+Author: Greg Bunce <gbunce@utah.gov>
+Date:   Fri Jul 7 09:58:01 2017 -0600
+
+    overlaps not stored in featureclass now - all alias names now stored in altnames table
+
+[33mcommit fc6ea9680bb7a747c89bddcab8575a1880c5d195[m
+Author: Greg Bunce <gbunce@utah.gov>
+Date:   Thu Jun 29 09:50:10 2017 -0600
+
+    updated queries for statewide data
+
+[33mcommit b91a4c51b74fa363988de85681404045c23b4501[m
+Author: Greg Bunce <gbunce@utah.gov>
+Date:   Fri Jun 23 11:46:37 2017 -0600
+
+    update to the altnames addrpnt table to make it significantly faster
+
+[33mcommit c54e5516ee917c5e69c669e90f9da1c6a9720f85[m
+Author: Greg Bunce <gbunce@utah.gov>
+Date:   Wed Jun 14 14:14:46 2017 -0600
+
+    created two commands for populating the altnames tables
+
+[33mcommit cc01e39306c17605898d9fb147cb6efc461cdeaf[m
+Author: Greg Bunce <gbunce@utah.gov>
+Date:   Wed Jun 14 10:55:03 2017 -0600
+
+    check for null values before code processes
+
+[33mcommit 7dd407a0fbdc7b0a7ceb423688cf6ecd92c68656[m
+Author: Greg Bunce <gbunce@utah.gov>
+Date:   Tue Jun 13 12:20:11 2017 -0600
+
+    fixed to the altnames addrpnts table - get row count
+
+[33mcommit 43367effe953b3776fc7755c4a32b84910a00a45[m
+Author: Greg Bunce <gbunce@utah.gov>
+Date:   Mon Jun 12 13:45:46 2017 -0600
+
+    added the AddNumSuffix field to the altnames address table
+
+[33mcommit c16801a082c9c0528ffa3d4dc5dbb8eb7562c150[m
+Author: Greg Bunce <gbunce@utah.gov>
+Date:   Mon Jun 12 11:49:27 2017 -0600
+
+    added field indexes for faster queries
+
+[33mcommit 93df0641403c0868d7efc3048d7e2b53f4948acc[m
+Author: Greg Bunce <gbunce@utah.gov>
+Date:   Fri Jun 9 22:40:50 2017 -0600
+
+    updates to altnames addrpnts table to pass in dictionary
+
+[33mcommit 0e599f6e8045b30ba80533f7f4ceba6c2333ee0c[m
+Author: Greg Bunce <gbunce@utah.gov>
+Date:   Fri Jun 9 16:05:40 2017 -0600
+
+    weekend commint
+
+[33mcommit 49cea7f38fd323a27788eb69032299d97a80797b[m
+Author: Greg Bunce <gbunce@utah.gov>
+Date:   Thu Jun 8 16:44:39 2017 -0600
+
+    updates to altnames addrpnts table
+
+[33mcommit 6451cc1e5d9c2fc518f998de1ff9b3e863023e89[m
+Merge: 50f2906 164f530
+Author: Greg Bunce <gbunce@utah.gov>
+Date:   Thu Jun 8 15:10:55 2017 -0600
+
+    Merge branch 'master' of https://github.com/agrc/RoadGrinder.git
+
+[33mcommit 50f2906e4daaaf505f97781112fc686e1cad64c1[m
+Author: Greg Bunce <gbunce@utah.gov>
+Date:   Thu Jun 8 14:54:22 2017 -0600
+
+    begin altnames addrpnts table load
+
+[33mcommit 46cd416a50685d3e5d649c00619b5abc5e0dff77[m
+Author: Greg Bunce <gbunce@utah.gov>
+Date:   Thu Jun 8 14:43:45 2017 -0600
+
+    created empty altnames table for address points
+
+[33mcommit a4cfbeef65595c6ac628c133587433933e07cc78[m
+Author: Greg Bunce <gbunce@utah.gov>
+Date:   Thu Jun 8 12:31:57 2017 -0600
+
+    remove sufdir from alias1-based features is acs primary
+
+[33mcommit 164f530dbceb19a54a966ce9e432d93a4782420c[m
+Author: steveoh <sgourley@utah.gov>
+Date:   Tue May 30 17:55:25 2017 -0600
+
+    Create README.md
+
+[33mcommit 94f02e216f879d42e1b51913cc526d27e5c9be8e[m
+Author: Greg Bunce <gbunce@utah.gov>
+Date:   Tue May 30 14:45:06 2017 -0600
+
+    removed comment
+
+[33mcommit 5ec4f95d35a7700d29a16c93d4ebe33d57830fbe[m
+Author: Greg Bunce <gbunce@utah.gov>
+Date:   Thu May 25 21:43:40 2017 -0600
+
+    updates to altnames table - stable - only eval alpha segs
+
+[33mcommit 92d9676d3d7b4aa8138f43f8a37f009876c44e68[m
+Author: Greg Bunce <gbunce@utah.gov>
+Date:   Tue May 23 16:39:05 2017 -0600
+
+    altname updates to console writeline
+
+[33mcommit 3dd17f6a4d1e34e40cf701e3acd986c1e31e524f[m
+Author: Greg Bunce <gbunce@utah.gov>
+Date:   Tue May 23 07:34:49 2017 -0600
+
+    altname improvements - check if larger fits in smaller
+
+[33mcommit 1c41f58487b4266c2bbcedfb0aef245c8d3c154c[m
+Author: Greg Bunce <gbunce@utah.gov>
+Date:   Mon May 22 16:14:35 2017 -0600
+
+    updates to altnames table
+
+[33mcommit ee97934b75d9c20b20d8f3862ad2f191c7dd6392[m
+Author: Greg Bunce <gbunce@utah.gov>
+Date:   Sun May 21 12:00:14 2017 -0600
+
+    minor changes to edit operations
+
+[33mcommit 27e8705b7aa2d8a1cfca2e3672802639d2793d3a[m
+Author: Greg Bunce <gbunce@utah.gov>
+Date:   Sat May 20 18:15:15 2017 -0600
+
+    updated code to altnames table to omit predir from geocode roads
+
+[33mcommit b7bbd11cf6c85f1b14e3e757bd24123c0bcf43aa[m
+Author: Greg Bunce <gbunce@utah.gov>
+Date:   Fri May 19 15:05:26 2017 -0600
+
+    updates to altnames table - to allow addresses to code w/o predir if not found in other quad
+
+[33mcommit 5993351ae12238d729d5f5509ee6c3d1a579c192[m
+Author: Greg Bunce <gbunce@utah.gov>
+Date:   Thu May 18 16:49:23 2017 -0600
+
+    altnames table began coding - going home though
+
+[33mcommit 2cc39ebccce91ef70734cb0bf7bb4266160e77b9[m
+Author: Greg Bunce <gbunce@utah.gov>
+Date:   Thu May 4 15:47:12 2017 -0600
+
+    updates to InsertFeaturesInto method
+
+[33mcommit 95e981eaa7183163c64e2e6433facb252abc02e7[m
+Author: Greg Bunce <gbunce@utah.gov>
+Date:   Thu May 4 10:46:34 2017 -0600
+
+    init - postSteveoh commits
+
+[33mcommit d6d4a4a3d44f0693aeab9e977e79f3d5f3db92b5[m
+Author: Greg Bunce <gbunce@utah.gov>
+Date:   Thu May 4 10:45:43 2017 -0600
+
+    Initial commit to add default .gitIgnore and .gitAttribute files.
