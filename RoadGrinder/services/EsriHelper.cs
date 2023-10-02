@@ -334,8 +334,8 @@ namespace RoadGrinder.services
                 //}
 
                 // for now we might have to use this format - begin...
-                newFeature.set_Value(newFeature.Fields.FindField("ADDRSYS_L"), fieldValues["ADDRSYS_L"].Value);
-                newFeature.set_Value(newFeature.Fields.FindField("ADDRSYS_R"), fieldValues["ADDRSYS_R"].Value);
+                newFeature.set_Value(newFeature.Fields.FindField("ADDRSYS_L"), fieldValues["ADDRSYS_L"].Value.ToString().ToUpper());
+                newFeature.set_Value(newFeature.Fields.FindField("ADDRSYS_R"), fieldValues["ADDRSYS_R"].Value.ToString().ToUpper());
                 newFeature.set_Value(newFeature.Fields.FindField("FROMADDR_L"), fieldValues["FROMADDR_L"].Value);
                 newFeature.set_Value(newFeature.Fields.FindField("TOADDR_L"), fieldValues["TOADDR_L"].Value);
                 newFeature.set_Value(newFeature.Fields.FindField("FROMADDR_R"), fieldValues["FROMADDR_R"].Value);
@@ -356,7 +356,6 @@ namespace RoadGrinder.services
                     newFeature.set_Value(newFeature.Fields.FindField("POSTTYPE"), string.Empty);
                 }
                 // for now we might have to use this format - ...end
-
                 newFeature.Store();
             }
             catch (Exception ex)
@@ -385,8 +384,8 @@ namespace RoadGrinder.services
                 else
                 {
                     // for now we might have to use this format - begin...
-                    newRow.set_Value(newRow.Fields.FindField("ADDRSYS_L"), fieldValues["ADDRSYS_L"].Value);
-                    newRow.set_Value(newRow.Fields.FindField("ADDRSYS_R"), fieldValues["ADDRSYS_R"].Value);
+                    newRow.set_Value(newRow.Fields.FindField("ADDRSYS_L"), fieldValues["ADDRSYS_L"].Value.ToString().ToUpper());
+                    newRow.set_Value(newRow.Fields.FindField("ADDRSYS_R"), fieldValues["ADDRSYS_R"].Value.ToString().ToUpper());
                     newRow.set_Value(newRow.Fields.FindField("FROMADDR_L"), fieldValues["FROMADDR_L"].Value);
                     newRow.set_Value(newRow.Fields.FindField("TOADDR_L"), fieldValues["TOADDR_L"].Value);
                     newRow.set_Value(newRow.Fields.FindField("FROMADDR_R"), fieldValues["FROMADDR_R"].Value);
